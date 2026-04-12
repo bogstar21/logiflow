@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiFlow - App Repartidor</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="header-flex">
+                <div class="header-title">
+                    <h1><i class="fas fa-shipping-fast"></i> LogiFlow</h1>
+                    <p style="color: #94a3b8; font-size: 0.85rem; margin-left: 45px;">Panel de Control de Reparto</p>
+                </div>
+                <div class="header-datetime">
+                    <div id="current-time">00:00:00</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="management-grid">
+            <section class="card">
+                <h3 class="section-title"><i class="fas fa-id-card"></i> Acceso</h3>
+                <div class="card-content">
+                    <input type="text" id="repartidor-id" placeholder="ID REPARTIDOR (123)">
+                    <button id="btn-cargar-ruta" class="btn-primary">
+                        <i class="fas fa-sync-alt"></i> Sincronizar Mi Ruta
+                    </button>
+                </div>
+
+                <div class="mini-stats">
+                    <div class="stat-item"><span>Paradas</span><b id="delivery-count">0</b></div>
+                    <div class="stat-item"><span>Lluvia</span><b id="rain-prob">--%</b></div>
+                    <div class="stat-item"><span>Tráfico</span><b id="traffic-status">OK</b></div>
+                </div>
+
+                <button id="btn-google-maps" class="btn-action btn-maps-modern"
+                    style="background: #4285F4; color: white; width: 100%; margin-top: 15px; border-radius: 8px; padding: 12px; font-weight: bold;">
+                    <i class="fab fa-google"></i> ABRIR RUTA COMPLETA
+                </button>
+            </section>
+
+            <section class="card">
+                <h3 class="section-title"><i class="fas fa-list-ul"></i> Orden de Entrega</h3>
+                <div id="delivery-ranking" class="ranking-list">
+                    <p class="no-data">Introduce ID para recibir la ruta...</p>
+                </div>
+            </section>
+        </div>
+
+        <section class="map-container">
+            <div class="map-controls">
+                <button id="toggle-route" class="map-btn active" title="Ver Ruta"><i class="fas fa-route"></i></button>
+                <button id="toggle-traffic" class="map-btn" title="Ver Tráfico"><i
+                        class="fas fa-traffic-light"></i></button>
+            </div>
+            <div id="map"></div>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="main.js"></script>
+
+    <input type="file" id="photo-input" accept="image/*" capture="camera" style="display:none">
+
+</body>
+
+</html>

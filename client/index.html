@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ca">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiFlow Client - Seguimiento</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="cliente-style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <header class="main-header">
+        <div class="container">
+            <div class="header-flex">
+                <div class="header-title">
+                    <h1><i class="fas fa-shipping-fast"></i> LogiFlow</h1>
+                    <p style="color: #64748b; font-size: 0.85rem; margin-left: 45px;">Donde esta mi paquete?</p>
+                </div>
+                <div class="header-datetime">
+                    <div id="current-time">00:00:00</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="management-grid">
+            <section class="card">
+                <h3 class="section-title"><i class="fas fa-search"></i> Localizar mi paquete</h3>
+                <div class="card-content">
+                    <div class="search-group">
+                        <input type="text" id="track-id" placeholder="Codi (Ex: P07)">
+                        <button id="btn-track" class="btn-primary" onclick="searchPackage()">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="status-container"
+                    style="display: none; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+                    <div id="status-label" class="status-badge" style="margin-top: 15px;">En camino</div>
+                    <p id="address-text" style="margin-top: 15px; font-weight: 500; color: #1e293b;"></p>
+
+                    <div class="stepper-wrapper" style="margin-top: 30px;">
+                        <div class="stepper-item" id="step-almacen">
+                            <div class="step-counter"><i class="fas fa-warehouse"></i></div>
+                            <div class="step-name">Almacén</div>
+                        </div>
+                        <div class="stepper-item" id="step-reparto">
+                            <div class="step-counter"><i class="fas fa-truck"></i></div>
+                            <div class="step-name">Reparto</div>
+                        </div>
+                        <div class="stepper-item" id="step-entregado">
+                            <div class="step-counter"><i class="fas fa-home"></i></div>
+                            <div class="step-name">Entregado</div>
+                        </div>
+                    </div>
+
+                    <div id="foto-evidencia" style="display: none; margin-top: 25px; text-align: center;">
+                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Evidencia de entrega:</p>
+                        <img id="img-evidencia" src=""
+                            style="width: 100%; border-radius: 12px; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" id="actions-card" style="display: none;">
+                <h3 class="section-title"><i class="fas fa-calendar-alt"></i> Gestionar Entrega</h3>
+                <div class="card-content">
+                    <div style="display: grid; gap: 12px;">
+                        <button class="btn-action" onclick="requestDelay('tomorrow')">
+                            <i class="fas fa-bed"></i>
+                            <span>Recibir mañana</span>
+                        </button>
+                        <button class="btn-action" onclick="requestDelay('afternoon')">
+                            <i class="fas fa-mug-hot"></i>
+                            <span>Recibir hoy por la tarde</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="map-container">
+                <div id="map"></div>
+            </section>
+        </div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="cliente.js"></script>
+</body>
+
+</html>
