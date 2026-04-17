@@ -26,7 +26,7 @@
         </div>
         <div class="nav-links">
             <a href="#" class="active"><i class="fas fa-grid-2"></i> Dashboard</a>
-            <a href="#" onclick="exportarExcel()"><i class="fas fa-file-csv"></i> Exportar CSV</a>
+            <a href="#" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</a>
         </div>
         <div class="nav-footer">
             <p>Admin Mode</p>
@@ -71,17 +71,17 @@
             <div class="search-bar">
                 <i class="fas fa-search"></i>
                 <input type="text" id="admin-search" placeholder="Buscar por código, dirección o repartidor..."
-                    onkeyup="filtrarEntregas()">
+                    onkeyup="filterDeliveries()">
             </div>
 
-            <select id="filtro-repartidor" class="admin-select" onchange="filtrarEntregas()">
-                <option value="todos">Todos los repartidores</option>
+            <select id="filtro-repartidor" class="admin-select" onchange="filterDeliveries()">
+                <option value="all">Todos los repartidores</option>
             </select>
 
             <div class="filter-group">
-                <button class="btn-filter active" onclick="setFiltro('todos', this)">Todos</button>
-                <button class="btn-filter" onclick="setFiltro('pendent', this)">Pendientes</button>
-                <button class="btn-filter" onclick="setFiltro('entregat', this)">Entregados</button>
+                <button class="btn-filter active" onclick="setFilter('all', this)">Todos</button>
+                <button class="btn-filter" onclick="setFilter('pending', this)">Pendientes</button>
+                <button class="btn-filter" onclick="setFilter('delivered', this)">Entregados</button>
                 <button class="btn-map" onclick="openGlobalMap()"><i class="fas fa-map-marked-alt"></i> Ver Mapa
                     Global</button>
             </div>
@@ -96,7 +96,7 @@
         <section class="data-section">
             <div class="table-header">
                 <h3>Monitor de Actividad</h3>
-                <button class="btn-download" onclick="exportarExcel()">
+                <button class="btn-download" onclick="exportCSV()">
                     <i class="fas fa-download"></i> Descargar Reporte
                 </button>
             </div>

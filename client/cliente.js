@@ -6,24 +6,24 @@
 // --- FAKE DATABASE ---
 // Same data as admin — in future this will come from your API
 const DELIVERIES = [
-  { id: "P01", address: "Calle Colón 1, Valencia",          status: "delivered", driver: "DRV-001", lat: 39.4697, lng: -0.3774, photo_url: null },
-  { id: "P02", address: "Avenida del Puerto 15, Valencia",  status: "pending",   driver: "DRV-002", lat: 39.4739, lng: -0.3732, photo_url: null },
-  { id: "P03", address: "Plaza del Ayuntamiento 3",         status: "delivered", driver: "DRV-001", lat: 39.4699, lng: -0.3763, photo_url: null },
-  { id: "P04", address: "Calle Xàtiva 22, Valencia",        status: "incident",  driver: "DRV-003", lat: 39.4658, lng: -0.3780, photo_url: null },
-  { id: "P05", address: "Gran Vía Marqués del Turia 48",    status: "pending",   driver: "DRV-002", lat: 39.4681, lng: -0.3810, photo_url: null },
-  { id: "P06", address: "Calle Cirilo Amorós 55",           status: "tomorrow",  driver: "DRV-001", lat: 39.4710, lng: -0.3795, photo_url: null },
-  { id: "P07", address: "Avenida Blasco Ibáñez 10",         status: "delivered", driver: "DRV-003", lat: 39.4780, lng: -0.3600, photo_url: null },
-  { id: "P08", address: "Calle Russafa 8, Valencia",        status: "pending",   driver: "DRV-002", lat: 39.4640, lng: -0.3750, photo_url: null },
-  { id: "P09", address: "Plaza de España 2, Valencia",      status: "delivered", driver: "DRV-001", lat: 39.4720, lng: -0.3830, photo_url: null },
-  { id: "P10", address: "Calle San Vicente Mártir 71",      status: "incident",  driver: "DRV-003", lat: 39.4670, lng: -0.3760, photo_url: null },
+  { id: "P01", address: "Calle Colón 1, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4697, lng: -0.3774, photo_url: null },
+  { id: "P02", address: "Avenida del Puerto 15, Valencia", status: "pending", driver: "DRV-002", lat: 39.4739, lng: -0.3732, photo_url: null },
+  { id: "P03", address: "Plaza del Ayuntamiento 3", status: "delivered", driver: "DRV-001", lat: 39.4699, lng: -0.3763, photo_url: null },
+  { id: "P04", address: "Calle Xàtiva 22, Valencia", status: "incident", driver: "DRV-003", lat: 39.4658, lng: -0.3780, photo_url: null },
+  { id: "P05", address: "Gran Vía Marqués del Turia 48", status: "pending", driver: "DRV-002", lat: 39.4681, lng: -0.3810, photo_url: null },
+  { id: "P06", address: "Calle Cirilo Amorós 55", status: "tomorrow", driver: "DRV-001", lat: 39.4710, lng: -0.3795, photo_url: null },
+  { id: "P07", address: "Avenida Blasco Ibáñez 10", status: "delivered", driver: "DRV-003", lat: 39.4780, lng: -0.3600, photo_url: null },
+  { id: "P08", address: "Calle Russafa 8, Valencia", status: "pending", driver: "DRV-002", lat: 39.4640, lng: -0.3750, photo_url: null },
+  { id: "P09", address: "Plaza de España 2, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4720, lng: -0.3830, photo_url: null },
+  { id: "P10", address: "Calle San Vicente Mártir 71", status: "incident", driver: "DRV-003", lat: 39.4670, lng: -0.3760, photo_url: null },
 ];
 
 // --- STATUS CONFIG (code = English, label = Spanish) ---
 const STATUS_CONFIG = {
-  delivered: { label: "✅ Entregado",      cssClass: "status-delivered", step: 3 },
-  pending:   { label: "🚚 En camino",      cssClass: "status-pending",   step: 2 },
-  incident:  { label: "⚠️ Incidencia",     cssClass: "status-incident",  step: 2 },
-  tomorrow:  { label: "📅 Para mañana",    cssClass: "status-tomorrow",  step: 1 },
+  delivered: { label: "✅ Entregado", cssClass: "status-delivered", step: 3 },
+  pending: { label: "🚚 En camino", cssClass: "status-pending", step: 2 },
+  incident: { label: "⚠️ Incidencia", cssClass: "status-incident", step: 2 },
+  tomorrow: { label: "📅 Para mañana", cssClass: "status-tomorrow", step: 1 },
 };
 
 // --- APP STATE ---
@@ -157,18 +157,30 @@ function renderPackageStatus({ id, address, status, photo_url }) {
 
 function updateStepper(currentStep) {
   const steps = [
-    document.getElementById("step-almacen"),   // step 1
-    document.getElementById("step-reparto"),    // step 2
-    document.getElementById("step-entregado"),  // step 3
+    document.getElementById("step-almacen"),   // index 0, step 1
+    document.getElementById("step-reparto"),    // index 1, step 2
+    document.getElementById("step-entregado"),  // index 2, step 3
   ];
 
   steps.forEach((step, index) => {
     if (!step) return;
+
+    // 1. Clean up classes
     step.classList.remove("active", "completed");
 
     const stepNumber = index + 1;
-    if (stepNumber < currentStep) step.classList.add("completed");
-    if (stepNumber === currentStep) step.classList.add("active");
+
+    // 2. Logic for coloring
+    if (stepNumber <= currentStep) {
+      // If the package is DELIVERED (step 3), ALL steps are completed
+      // Otherwise, only steps BEFORE the current one are completed
+      step.classList.add("completed");
+
+      // 3. Mark the current one as active (to keep the glow/animation if any)
+      if (stepNumber === currentStep) {
+        step.classList.add("active");
+      }
+    }
   });
 }
 

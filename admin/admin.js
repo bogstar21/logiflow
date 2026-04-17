@@ -5,25 +5,25 @@
 
 // --- FAKE DATABASE ---
 const DELIVERIES = [
-  { id: "P01", address: "Calle Colón 1, Valencia",          status: "delivered",   driver: "DRV-001", lat: 39.4697, lng: -0.3774 },
-  { id: "P02", address: "Avenida del Puerto 15, Valencia",  status: "pending",     driver: "DRV-002", lat: 39.4739, lng: -0.3732 },
-  { id: "P03", address: "Plaza del Ayuntamiento 3",         status: "delivered",   driver: "DRV-001", lat: 39.4699, lng: -0.3763 },
-  { id: "P04", address: "Calle Xàtiva 22, Valencia",        status: "incident",    driver: "DRV-003", lat: 39.4658, lng: -0.3780 },
-  { id: "P05", address: "Gran Vía Marqués del Turia 48",    status: "pending",     driver: "DRV-002", lat: 39.4681, lng: -0.3810 },
-  { id: "P06", address: "Calle Cirilo Amorós 55",           status: "tomorrow",    driver: "DRV-001", lat: 39.4710, lng: -0.3795 },
-  { id: "P07", address: "Avenida Blasco Ibáñez 10",         status: "delivered",   driver: "DRV-003", lat: 39.4780, lng: -0.3600 },
-  { id: "P08", address: "Calle Russafa 8, Valencia",        status: "pending",     driver: "DRV-002", lat: 39.4640, lng: -0.3750 },
-  { id: "P09", address: "Plaza de España 2, Valencia",      status: "delivered",   driver: "DRV-001", lat: 39.4720, lng: -0.3830 },
-  { id: "P10", address: "Calle San Vicente Mártir 71",      status: "incident",    driver: "DRV-003", lat: 39.4670, lng: -0.3760 },
+  { id: "P01", address: "Calle Colón 1, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4697, lng: -0.3774 },
+  { id: "P02", address: "Avenida del Puerto 15, Valencia", status: "pending", driver: "DRV-002", lat: 39.4739, lng: -0.3732 },
+  { id: "P03", address: "Plaza del Ayuntamiento 3", status: "delivered", driver: "DRV-001", lat: 39.4699, lng: -0.3763 },
+  { id: "P04", address: "Calle Xàtiva 22, Valencia", status: "incident", driver: "DRV-003", lat: 39.4658, lng: -0.3780 },
+  { id: "P05", address: "Gran Vía Marqués del Turia 48", status: "pending", driver: "DRV-002", lat: 39.4681, lng: -0.3810 },
+  { id: "P06", address: "Calle Cirilo Amorós 55", status: "tomorrow", driver: "DRV-001", lat: 39.4710, lng: -0.3795 },
+  { id: "P07", address: "Avenida Blasco Ibáñez 10", status: "delivered", driver: "DRV-003", lat: 39.4780, lng: -0.3600 },
+  { id: "P08", address: "Calle Russafa 8, Valencia", status: "pending", driver: "DRV-002", lat: 39.4640, lng: -0.3750 },
+  { id: "P09", address: "Plaza de España 2, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4720, lng: -0.3830 },
+  { id: "P10", address: "Calle San Vicente Mártir 71", status: "incident", driver: "DRV-003", lat: 39.4670, lng: -0.3760 },
 ];
 
 // --- STATUS CONFIG ---
 // One place to control all status labels and styles
 const STATUS_CONFIG = {
-  delivered: { label: "DELIVERED",  cssClass: "status-delivered" },
-  pending:   { label: "PENDING",    cssClass: "status-pending"   },
-  incident:  { label: "INCIDENT",   cssClass: "status-incident"  },
-  tomorrow:  { label: "TOMORROW",   cssClass: "status-tomorrow"  },
+  delivered: { label: "DELIVERED", cssClass: "status-delivered" },
+  pending: { label: "PENDING", cssClass: "status-pending" },
+  incident: { label: "INCIDENT", cssClass: "status-incident" },
+  tomorrow: { label: "TOMORROW", cssClass: "status-tomorrow" },
 };
 
 // --- APP STATE ---
@@ -77,7 +77,7 @@ function filterDeliveries() {
 
   const filtered = DELIVERIES.filter(({ id, address, status, driver }) => {
     const matchSearch = id.toLowerCase().includes(search) ||
-                        address.toLowerCase().includes(search);
+      address.toLowerCase().includes(search);
     const matchStatus = currentFilter === "all" || status === currentFilter;
     const matchDriver = selectedDriver === "all" || driver === selectedDriver;
 
@@ -132,9 +132,9 @@ function renderTable(list) {
 // ============================================
 
 function updateCounters(list) {
-  const total     = list.length;
+  const total = list.length;
   const delivered = list.filter(({ status }) => status === "delivered").length;
-  const pending   = total - delivered;
+  const pending = total - delivered;
 
   const set = (id, val) => {
     const el = document.getElementById(id);
@@ -143,7 +143,7 @@ function updateCounters(list) {
 
   set("total-entregas", total);
   set("total-pendents", pending);
-  set("total-fet",      delivered);
+  set("total-fet", delivered);
 }
 
 // ============================================
@@ -207,8 +207,8 @@ function openGlobalMap() {
         color: "#fff", weight: 2,
         opacity: 1, fillOpacity: 0.9
       })
-      .addTo(globalMap)
-      .bindPopup(`
+        .addTo(globalMap)
+        .bindPopup(`
         <div style="font-family:sans-serif;padding:5px;">
           <strong style="color:${color}">#${id}</strong><br>
           <small style="color:#64748b">${address}</small><br>

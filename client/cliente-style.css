@@ -252,3 +252,15 @@ body {
         font-size: 0.6rem;
     }
 }
+
+/* This is usually what controls the line color between steps */
+.stepper-item.completed+.stepper-item::before {
+    background-color: #10b981;
+    /* Green */
+}
+
+.stepper-item.completed .step-counter {
+    background-color: #10b981;
+    /* Green circle */
+    color: white;
+}
