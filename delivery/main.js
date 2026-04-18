@@ -331,20 +331,41 @@ async function confirmDelivery(pointId) {
   const modal = document.getElementById("photo-preview-modal");
   if (modal) modal.remove();
 
+  const btn = document.getElementById(`btn-cam-${pointId}`);
+  if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+
   try {
-    // Update real API!
-    await fetch(`${API_URL}/api/deliveries/${pointId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: "delivered" })
-    });
+    // Get the photo file
+    const photoInput = document.getElementById("photo-input");
+    const file = photoInput ? photoInput.files[0] : null;
+
+    if (file) {
+      // Convert to base64
+      const base64 = await fileToBase64(file);
+
+      // Send to API — uploads photo + marks delivered
+      await fetch(`${API_URL}/api/photos/upload`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          base64,
+          deliveryId: pointId
+        })
+      });
+
+    } else {
+      // No photo — just mark delivered
+      await fetch(`${API_URL}/api/deliveries/${pointId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "delivered" })
+      });
+    }
 
     // Update local state
     const point = deliveryPoints.find(({ id }) => id === pointId);
     if (point) point.status = "delivered";
 
-    // Update button
-    const btn = document.getElementById(`btn-cam-${pointId}`);
     if (btn) {
       btn.style.background = "#10b981";
       btn.innerHTML = '<i class="fas fa-check"></i> ENTREGADO';
@@ -356,11 +377,22 @@ async function confirmDelivery(pointId) {
     drawRoute();
 
   } catch (error) {
-    console.error("Delivery confirmation error:", error);
-    alert("Error al confirmar entrega. Inténtalo de nuevo.");
+    console.error("Delivery error:", error);
+    alert("Error al confirmar entrega.");
+    if (btn) btn.innerHTML = '<i class="fas fa-camera"></i> Entregar';
   }
 
   selectedPhotoPointId = null;
+}
+
+// Helper — converts file to base64
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function cancelPhotoPreview() {
