@@ -1,24 +1,12 @@
 // ============================================
 // LOGIFLOW — Admin Dashboard
-// Data source: Fake JSON (replace with API later)
+// Data source: Real API (logiflow-api on Render)
 // ============================================
 
-// --- FAKE DATABASE ---
-const DELIVERIES = [
-  { id: "P01", address: "Calle Colón 1, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4697, lng: -0.3774 },
-  { id: "P02", address: "Avenida del Puerto 15, Valencia", status: "pending", driver: "DRV-002", lat: 39.4739, lng: -0.3732 },
-  { id: "P03", address: "Plaza del Ayuntamiento 3", status: "delivered", driver: "DRV-001", lat: 39.4699, lng: -0.3763 },
-  { id: "P04", address: "Calle Xàtiva 22, Valencia", status: "incident", driver: "DRV-003", lat: 39.4658, lng: -0.3780 },
-  { id: "P05", address: "Gran Vía Marqués del Turia 48", status: "pending", driver: "DRV-002", lat: 39.4681, lng: -0.3810 },
-  { id: "P06", address: "Calle Cirilo Amorós 55", status: "tomorrow", driver: "DRV-001", lat: 39.4710, lng: -0.3795 },
-  { id: "P07", address: "Avenida Blasco Ibáñez 10", status: "delivered", driver: "DRV-003", lat: 39.4780, lng: -0.3600 },
-  { id: "P08", address: "Calle Russafa 8, Valencia", status: "pending", driver: "DRV-002", lat: 39.4640, lng: -0.3750 },
-  { id: "P09", address: "Plaza de España 2, Valencia", status: "delivered", driver: "DRV-001", lat: 39.4720, lng: -0.3830 },
-  { id: "P10", address: "Calle San Vicente Mártir 71", status: "incident", driver: "DRV-003", lat: 39.4670, lng: -0.3760 },
-];
+// --- API CONFIG ---
+const API_URL = "https://logiflow-api-07n7.onrender.com";
 
 // --- STATUS CONFIG ---
-// One place to control all status labels and styles
 const STATUS_CONFIG = {
   delivered: { label: "DELIVERED", cssClass: "status-delivered" },
   pending: { label: "PENDING", cssClass: "status-pending" },
@@ -29,23 +17,50 @@ const STATUS_CONFIG = {
 // --- APP STATE ---
 let currentFilter = "all";
 let globalMap = null;
+let DELIVERIES = []; // now populated from API!
 
 // ============================================
 // INIT
 // ============================================
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   startClock();
-  renderAll(DELIVERIES);
-  populateDriverFilter();
+  await loadDeliveries(); // fetch from real API!
 
-  // Export button
   const btnExport = document.getElementById("btn-exportar");
   if (btnExport) btnExport.onclick = exportCSV;
 });
 
 // ============================================
-// 1. CLOCK
+// 1. LOAD FROM API
+// ============================================
+
+async function loadDeliveries() {
+  try {
+    const response = await fetch(`${API_URL}/api/deliveries`);
+    const { data } = await response.json();
+
+    // Map Supabase column names to our app's names
+    DELIVERIES = data.map(({ delivery_id, address, status, driver_id, photo_url, lat, lng }) => ({
+      id: delivery_id,
+      address,
+      status,
+      driver: driver_id,
+      photo_url,
+      lat,
+      lng
+    }));
+
+    renderAll(DELIVERIES);
+    populateDriverFilter();
+
+  } catch (error) {
+    console.error("Error loading deliveries:", error);
+  }
+}
+
+// ============================================
+// 2. CLOCK
 // ============================================
 
 function startClock() {
@@ -65,7 +80,7 @@ function startClock() {
 }
 
 // ============================================
-// 2. FILTER & SEARCH
+// 3. FILTER & SEARCH
 // ============================================
 
 function filterDeliveries() {
@@ -95,7 +110,7 @@ function setFilter(status, btn) {
 }
 
 // ============================================
-// 3. RENDER TABLE
+// 4. RENDER TABLE
 // ============================================
 
 function renderTable(list) {
@@ -128,7 +143,7 @@ function renderTable(list) {
 }
 
 // ============================================
-// 4. UPDATE COUNTERS
+// 5. UPDATE COUNTERS
 // ============================================
 
 function updateCounters(list) {
@@ -147,7 +162,7 @@ function updateCounters(list) {
 }
 
 // ============================================
-// 5. POPULATE DRIVER FILTER
+// 6. POPULATE DRIVER FILTER
 // ============================================
 
 function populateDriverFilter() {
@@ -161,7 +176,7 @@ function populateDriverFilter() {
 }
 
 // ============================================
-// 6. RENDER ALL (table + counters)
+// 7. RENDER ALL (table + counters)
 // ============================================
 
 function renderAll(list) {
@@ -170,7 +185,7 @@ function renderAll(list) {
 }
 
 // ============================================
-// 7. GLOBAL MAP
+// 8. GLOBAL MAP
 // ============================================
 
 function openGlobalMap() {
@@ -195,7 +210,7 @@ function openGlobalMap() {
       }
     });
 
-    // Add delivery points
+    // Add delivery points from real data
     DELIVERIES.forEach(({ id, address, status, lat, lng }) => {
       if (!lat || !lng) return;
 
@@ -209,12 +224,12 @@ function openGlobalMap() {
       })
         .addTo(globalMap)
         .bindPopup(`
-        <div style="font-family:sans-serif;padding:5px;">
-          <strong style="color:${color}">#${id}</strong><br>
-          <small style="color:#64748b">${address}</small><br>
-          <div style="margin-top:5px;font-weight:bold;">Status: ${label}</div>
-        </div>
-      `);
+          <div style="font-family:sans-serif;padding:5px;">
+            <strong style="color:${color}">#${id}</strong><br>
+            <small style="color:#64748b">${address}</small><br>
+            <div style="margin-top:5px;font-weight:bold;">Status: ${label}</div>
+          </div>
+        `);
     });
   }, 400);
 }
@@ -224,7 +239,7 @@ function closeGlobalMap() {
 }
 
 // ============================================
-// 8. EXPORT CSV
+// 9. EXPORT CSV
 // ============================================
 
 function exportCSV() {
