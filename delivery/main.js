@@ -1,27 +1,10 @@
 // ============================================
 // LOGIFLOW — Driver App
-// Data source: Fake JSON (replace with API later)
+// Data source: Real API (logiflow-api on Render)
 // ============================================
 
-// --- FAKE DATABASE ---
-const DRIVERS = {
-  "DRV-001": [
-    { id: "P01", address: "Calle Colón 1, Valencia", status: "delivered", lat: 39.4697, lng: -0.3774 },
-    { id: "P03", address: "Plaza del Ayuntamiento 3", status: "delivered", lat: 39.4699, lng: -0.3763 },
-    { id: "P06", address: "Calle Cirilo Amorós 55", status: "pending", lat: 39.4710, lng: -0.3795 },
-    { id: "P09", address: "Plaza de España 2, Valencia", status: "pending", lat: 39.4720, lng: -0.3830 },
-  ],
-  "DRV-002": [
-    { id: "P02", address: "Avenida del Puerto 15, Valencia", status: "pending", lat: 39.4739, lng: -0.3732 },
-    { id: "P05", address: "Gran Vía Marqués del Turia 48", status: "pending", lat: 39.4681, lng: -0.3810 },
-    { id: "P08", address: "Calle Russafa 8, Valencia", status: "pending", lat: 39.4640, lng: -0.3750 },
-  ],
-  "DRV-003": [
-    { id: "P04", address: "Calle Xàtiva 22, Valencia", status: "incident", lat: 39.4658, lng: -0.3780 },
-    { id: "P07", address: "Avenida Blasco Ibáñez 10", status: "delivered", lat: 39.4780, lng: -0.3600 },
-    { id: "P10", address: "Calle San Vicente Mártir 71", status: "pending", lat: 39.4670, lng: -0.3760 },
-  ],
-};
+// --- API CONFIG ---
+const API_URL = "https://logiflow-api-07n7.onrender.com";
 
 // --- BASE LOCATION (Valencia depot) ---
 const BASE_LOCATION = { lat: 39.4632, lng: -0.3541 };
@@ -42,22 +25,18 @@ document.addEventListener("DOMContentLoaded", () => {
   startClock();
   loadWeather();
 
-  // Load route button
   const btnLoad = document.getElementById("btn-cargar-ruta");
   if (btnLoad) btnLoad.onclick = loadDriverRoute;
 
-  // Photo input handler
   const photoInput = document.getElementById("photo-input");
   if (photoInput) photoInput.addEventListener("change", handlePhotoCapture);
 
-  // Map control buttons
   const btnTraffic = document.getElementById("toggle-traffic");
   if (btnTraffic) btnTraffic.onclick = toggleTraffic;
 
   const btnRoute = document.getElementById("toggle-route");
   if (btnRoute) btnRoute.onclick = toggleRoute;
 
-  // Google Maps button
   setTimeout(() => {
     const btnMaps = document.getElementById("btn-google-maps");
     if (btnMaps) btnMaps.onclick = openGoogleMapsRoute;
@@ -97,10 +76,10 @@ function initMap() {
 }
 
 // ============================================
-// 3. LOAD DRIVER ROUTE
+// 3. LOAD DRIVER ROUTE — now calls real API!
 // ============================================
 
-function loadDriverRoute() {
+async function loadDriverRoute() {
   const input = document.getElementById("repartidor-id");
   const btn = document.getElementById("btn-cargar-ruta");
   const driverId = input ? input.value.trim().toUpperCase() : "";
@@ -110,28 +89,58 @@ function loadDriverRoute() {
     return;
   }
 
-  // Check if driver exists in fake data
-  if (!DRIVERS[driverId]) {
-    alert("ID no encontrado. Prueba: DRV-001, DRV-002 o DRV-003");
-    return;
-  }
+  try {
+    // Show loading state
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+    }
 
-  currentDriverId = driverId;
+    // Fetch from real API
+    const response = await fetch(`${API_URL}/api/driver/${driverId}`);
+    const { data, success } = await response.json();
 
-  // Load delivery points — deep copy to avoid mutation issues
-  deliveryPoints = DRIVERS[driverId].map(point => ({ ...point }));
+    if (!success || !data || data.length === 0) {
+      alert("ID no encontrado. Prueba: DRV-001, DRV-002 o DRV-003");
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar Mi Ruta';
+      }
+      return;
+    }
 
-  // Update counter
-  const countEl = document.getElementById("delivery-count");
-  if (countEl) countEl.textContent = deliveryPoints.length;
+    currentDriverId = driverId;
 
-  // Optimize route and render
-  optimizeRoute();
+    // Map Supabase column names to app names
+    deliveryPoints = data.map(({ delivery_id, address, status, lat, lng }) => ({
+      id: delivery_id,
+      address,
+      status,
+      lat,
+      lng
+    }));
 
-  // Update button
-  if (btn) {
-    btn.innerHTML = '<i class="fas fa-check"></i> RUTA CARGADA';
-    btn.style.background = "#10b981";
+    // Update counter
+    const countEl = document.getElementById("delivery-count");
+    if (countEl) countEl.textContent = deliveryPoints.length;
+
+    // Optimize route and render
+    optimizeRoute();
+
+    // Update button
+    if (btn) {
+      btn.innerHTML = '<i class="fas fa-check"></i> RUTA CARGADA';
+      btn.style.background = "#10b981";
+      btn.disabled = false;
+    }
+
+  } catch (error) {
+    console.error("Route loading error:", error);
+    alert("Error de conexión. Inténtalo de nuevo.");
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar Mi Ruta';
+    }
   }
 }
 
@@ -142,17 +151,14 @@ function loadDriverRoute() {
 function optimizeRoute() {
   if (deliveryPoints.length === 0) return;
 
-  // Separate delivered and pending points
   const delivered = deliveryPoints.filter(({ status }) => status === "delivered");
   const pending = deliveryPoints.filter(({ status }) => status === "pending" || status === "incident");
 
-  // Nearest neighbor algorithm on pending points only
   let optimized = [];
   let remaining = [...pending];
   let currentPos = BASE_LOCATION;
 
   while (remaining.length > 0) {
-    // Find nearest point to current position
     let nearestIndex = 0;
     let minDistance = Infinity;
 
@@ -172,13 +178,9 @@ function optimizeRoute() {
     currentPos = nearest;
   }
 
-  // Final order: delivered first, then optimized pending
   deliveryPoints = [...delivered, ...optimized];
 
-  // Calculate ETA for each stop
   calculateETA();
-
-  // Render everything
   renderRanking();
   renderMapMarkers();
   drawRoute();
@@ -197,14 +199,13 @@ function calculateETA() {
     const distance = Math.sqrt(
       Math.pow(point.lat - lastPos.lat, 2) +
       Math.pow(point.lng - lastPos.lng, 2)
-    ) * 111; // Convert to km
+    ) * 111;
 
-    const minutesPerStop = (distance * 5) + 8; // 5 min/km + 8 min per stop
+    const minutesPerStop = (distance * 5) + 8;
     accumulatedTime = new Date(accumulatedTime.getTime() + minutesPerStop * 60000);
 
     point.eta = accumulatedTime.toLocaleTimeString("es-ES", {
-      hour: "2-digit",
-      minute: "2-digit"
+      hour: "2-digit", minute: "2-digit"
     });
 
     lastPos = point;
@@ -230,14 +231,11 @@ function renderRanking() {
     const btnIcon = isDelivered ? "fa-check-double" : "fa-camera";
     const btnText = isDelivered ? "Entregado" : "Entregar";
     const btnClass = isDelivered ? "btn-skip-modern" : "btn-success";
-
-    // Origin for Google Maps directions
     const origin = `${BASE_LOCATION.lat},${BASE_LOCATION.lng}`;
 
     return `
       <div class="ranking-item" id="item-${id}"
            style="opacity:${isDelivered ? 0.6 : 1}; border-left: 5px solid ${borderColor}">
-
         <div style="display:flex; justify-content:space-between; align-items:start;">
           <div>
             <span style="background:#eef2ff; color:#6366f1; padding:4px 10px;
@@ -255,7 +253,6 @@ function renderRanking() {
             🕐 ${eta || "--:--"}
           </div>
         </div>
-
         <div style="display:flex; gap:8px; margin-top:15px;">
           <button id="btn-cam-${id}"
                   class="btn-action ${btnClass}"
@@ -263,14 +260,12 @@ function renderRanking() {
                   style="flex:2;" ${isDelivered ? "disabled" : ""}>
             <i class="fas ${btnIcon}"></i> ${btnText}
           </button>
-
           <button class="btn-action"
                   onclick="registerIncident('${id}')"
                   style="background:#f59e0b; color:white; flex:0.6;"
                   title="Incidencia">
             <i class="fas fa-exclamation-triangle"></i>
           </button>
-
           <button class="btn-action"
                   onclick="window.open('https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${point.lat},${point.lng}&travelmode=driving', '_blank')"
                   style="background:#34a853; color:white; flex:0.6;">
@@ -296,9 +291,6 @@ function handlePhotoCapture(e) {
   const file = e.target.files[0];
   if (!file || !selectedPhotoPointId) return;
 
-  const btn = document.getElementById(`btn-cam-${selectedPhotoPointId}`);
-
-  // Show photo preview before confirming delivery
   const reader = new FileReader();
   reader.onload = (event) => {
     const previewHTML = `
@@ -332,32 +324,41 @@ function handlePhotoCapture(e) {
   };
 
   reader.readAsDataURL(file);
-
-  // Reset input for next photo
   e.target.value = "";
 }
 
-function confirmDelivery(pointId) {
-  // Remove preview modal
+async function confirmDelivery(pointId) {
   const modal = document.getElementById("photo-preview-modal");
   if (modal) modal.remove();
 
-  // Update local state
-  const point = deliveryPoints.find(({ id }) => id === pointId);
-  if (point) point.status = "delivered";
+  try {
+    // Update real API!
+    await fetch(`${API_URL}/api/deliveries/${pointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "delivered" })
+    });
 
-  // Update button immediately
-  const btn = document.getElementById(`btn-cam-${pointId}`);
-  if (btn) {
-    btn.style.background = "#10b981";
-    btn.innerHTML = '<i class="fas fa-check"></i> ENTREGADO';
-    btn.disabled = true;
+    // Update local state
+    const point = deliveryPoints.find(({ id }) => id === pointId);
+    if (point) point.status = "delivered";
+
+    // Update button
+    const btn = document.getElementById(`btn-cam-${pointId}`);
+    if (btn) {
+      btn.style.background = "#10b981";
+      btn.innerHTML = '<i class="fas fa-check"></i> ENTREGADO';
+      btn.disabled = true;
+    }
+
+    renderRanking();
+    renderMapMarkers();
+    drawRoute();
+
+  } catch (error) {
+    console.error("Delivery confirmation error:", error);
+    alert("Error al confirmar entrega. Inténtalo de nuevo.");
   }
-
-  // Re-render everything
-  renderRanking();
-  renderMapMarkers();
-  drawRoute();
 
   selectedPhotoPointId = null;
 }
@@ -369,23 +370,33 @@ function cancelPhotoPreview() {
 }
 
 // ============================================
-// 8. INCIDENTS
+// 8. INCIDENTS — now calls real API!
 // ============================================
 
-function registerIncident(pointId) {
+async function registerIncident(pointId) {
   const reason = prompt("Motivo de la incidencia (Ej: Cliente ausente, Dirección incorrecta):");
   if (!reason) return;
 
-  // Update local state
-  const point = deliveryPoints.find(({ id }) => id === pointId);
-  if (point) {
-    point.status = "incident";
-    point.incidentReason = reason;
-  }
+  try {
+    await fetch(`${API_URL}/api/deliveries/${pointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "incident" })
+    });
 
-  alert("⚠️ Incidencia registrada localmente.");
-  renderRanking();
-  renderMapMarkers();
+    const point = deliveryPoints.find(({ id }) => id === pointId);
+    if (point) {
+      point.status = "incident";
+      point.incidentReason = reason;
+    }
+
+    alert("⚠️ Incidencia registrada.");
+    renderRanking();
+    renderMapMarkers();
+
+  } catch (error) {
+    console.error("Incident error:", error);
+  }
 }
 
 // ============================================
@@ -433,7 +444,6 @@ async function drawRoute() {
         style: { color: "#38bdf8", weight: 4, opacity: 0.8 }
       }).addTo(routeLayer);
 
-      // Fit map to show all points
       const group = new L.featureGroup(markersLayer.getLayers());
       if (group.getLayers().length > 0) {
         map.fitBounds(group.getBounds().pad(0.1));
@@ -468,7 +478,6 @@ async function loadTraffic() {
       })
     }).addTo(trafficLayer);
 
-    // Check if delivery points are in congested zones
     if (deliveryPoints.length > 0) {
       deliveryPoints.forEach(point => {
         point.inTrafficZone = data.features.some(({ properties, geometry }) => {
@@ -478,15 +487,12 @@ async function loadTraffic() {
             Math.pow(point.lat - lat, 2) +
             Math.pow(point.lng - lng, 2)
           );
-          return distance < 0.005; // ~500 meters
+          return distance < 0.005;
         });
       });
-
-      // Recalculate ETA with traffic data
       optimizeRoute();
     }
 
-    // Update traffic status badge
     const heavyTraffic = data.features.filter(({ properties }) => properties.estado >= 3).length;
     if (statusEl) {
       statusEl.innerHTML = heavyTraffic > 15
