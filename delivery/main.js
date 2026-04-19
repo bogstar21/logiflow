@@ -335,6 +335,8 @@ async function confirmDelivery(pointId) {
   const modal = document.getElementById("photo-preview-modal");
   if (modal) modal.remove();
 
+  console.log("capturedPhotoFile:", capturedPhotoFile);
+  console.log("pointId:", pointId);
   const btn = document.getElementById(`btn-cam-${pointId}`);
   if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
 
@@ -609,4 +611,37 @@ function toggleRoute() {
     map.addLayer(routeLayer);
     if (btn) btn.classList.add("active");
   }
+}
+
+// Compress image before uploading
+function compressImage(file, maxSizeMB = 0.3) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+
+        // Resize to max 800px wide
+        let width = img.width;
+        let height = img.height;
+        if (width > 800) {
+          height = (height * 800) / width;
+          width = 800;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG 0.7 quality
+        const compressed = canvas.toDataURL("image/jpeg", 0.7);
+        resolve(compressed);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
