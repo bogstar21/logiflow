@@ -343,7 +343,7 @@ async function confirmDelivery(pointId) {
   try {
     // 1. Si hay foto, la subimos primero
     if (capturedPhotoFile) {
-      const base64 = await fileToBase64(capturedPhotoFile);
+      const base64 = await compressImage(capturedPhotoFile);
 
       await fetch(`${API_URL}/api/photos/upload`, {
         method: "POST",
