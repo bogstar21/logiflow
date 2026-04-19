@@ -15,6 +15,7 @@ let map, trafficLayer, markersLayer, routeLayer;
 let deliveryPoints = [];
 let selectedPhotoPointId = null;
 let currentDriverId = null;
+let capturedPhotoFile = null;
 
 // ============================================
 // INIT
@@ -291,6 +292,9 @@ function handlePhotoCapture(e) {
   const file = e.target.files[0];
   if (!file || !selectedPhotoPointId) return;
 
+  // ✅ Save the file globally before clearing the input
+  capturedPhotoFile = file;
+
   const reader = new FileReader();
   reader.onload = (event) => {
     const previewHTML = `
@@ -324,7 +328,7 @@ function handlePhotoCapture(e) {
   };
 
   reader.readAsDataURL(file);
-  e.target.value = "";
+  e.target.value = ""; // Clear input safely
 }
 
 async function confirmDelivery(pointId) {
@@ -335,26 +339,18 @@ async function confirmDelivery(pointId) {
   if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
 
   try {
-    // Get the photo file
-    const photoInput = document.getElementById("photo-input");
-    const file = photoInput ? photoInput.files[0] : null;
+    // ✅ Use the global capturedPhotoFile instead of searching the DOM
+    if (capturedPhotoFile) {
+      const base64 = await fileToBase64(capturedPhotoFile);
 
-    if (file) {
-      // Convert to base64
-      const base64 = await fileToBase64(file);
-
-      // Send to API — uploads photo + marks delivered
       await fetch(`${API_URL}/api/photos/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          base64,
-          deliveryId: pointId
-        })
+        body: JSON.stringify({ base64, deliveryId: pointId })
       });
 
+      capturedPhotoFile = null; // Reset after upload
     } else {
-      // No photo — just mark delivered
       await fetch(`${API_URL}/api/deliveries/${pointId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -362,7 +358,6 @@ async function confirmDelivery(pointId) {
       });
     }
 
-    // Update local state
     const point = deliveryPoints.find(({ id }) => id === pointId);
     if (point) point.status = "delivered";
 
@@ -379,6 +374,7 @@ async function confirmDelivery(pointId) {
   } catch (error) {
     console.error("Delivery error:", error);
     alert("Error al confirmar entrega.");
+    capturedPhotoFile = null; // Cleanup on error
     if (btn) btn.innerHTML = '<i class="fas fa-camera"></i> Entregar';
   }
 
