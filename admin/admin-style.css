@@ -24,7 +24,9 @@ body {
     display: flex;
 }
 
-/* Sidebar */
+/* ============================================
+   SIDEBAR
+   ============================================ */
 .side-nav {
     width: 280px;
     background: var(--sidebar);
@@ -44,20 +46,12 @@ body {
     font-weight: 800;
     margin-bottom: 50px;
     color: var(--primary);
-    /* El azul eléctrico */
     letter-spacing: -0.5px;
 }
 
 .logo i {
     font-size: 1.8rem;
-    /* Si quieres un efecto de brillo como en las otras: */
     filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
-}
-
-.logo-icon {
-    background: var(--primary);
-    padding: 8px;
-    border-radius: 10px;
 }
 
 .nav-links a {
@@ -78,7 +72,9 @@ body {
     color: var(--primary-light);
 }
 
-/* Main Content */
+/* ============================================
+   MAIN CONTENT
+   ============================================ */
 .main-content {
     margin-left: 280px;
     padding: 50px;
@@ -106,7 +102,9 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-/* Stats */
+/* ============================================
+   STATS
+   ============================================ */
 .stats-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -133,6 +131,7 @@ body {
     align-items: center;
     justify-content: center;
     border-radius: 18px;
+    flex-shrink: 0;
 }
 
 .stat-card.blue .icon-box {
@@ -162,7 +161,104 @@ body {
     display: block;
 }
 
-/* Table */
+/* ============================================
+   ADMIN CONTROLS
+   ============================================ */
+.admin-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    flex-wrap: wrap;
+}
+
+.search-bar {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    background: #f1f5f9;
+    padding: 10px 15px;
+    border-radius: 10px;
+}
+
+.search-bar input {
+    background: transparent;
+    border: none;
+    outline: none;
+    margin-left: 10px;
+    width: 100%;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.filter-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-filter {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-filter.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.btn-map {
+    background: #1e293b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ============================================
+   DRIVER SELECT
+   ============================================ */
+.admin-select {
+    background: #f1f5f9;
+    border: 2px solid transparent;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    outline: none;
+    cursor: pointer;
+    transition: 0.3s;
+    min-width: 160px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+}
+
+.admin-select:focus {
+    border-color: var(--primary-light);
+    background-color: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+}
+
+/* ============================================
+   TABLE
+   ============================================ */
 .data-section {
     background: white;
     border-radius: 24px;
@@ -189,15 +285,23 @@ body {
     gap: 10px;
     align-items: center;
     transition: 0.3s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
 .btn-download:hover {
     background: var(--primary);
 }
 
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 15px;
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 550px;
 }
 
 th {
@@ -216,13 +320,38 @@ td {
     font-weight: 500;
 }
 
+/* ============================================
+   STATUS BADGES
+   ============================================ */
 .status-badge {
     padding: 6px 14px;
     border-radius: 10px;
     font-size: 0.75rem;
     font-weight: 700;
+    white-space: nowrap;
 }
 
+.status-delivered {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pending {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.status-incident {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.status-tomorrow {
+    background: #e0e7ff;
+    color: #4338ca;
+}
+
+/* Legacy Spanish class names (keep for backwards compat) */
 .status-entregat {
     background: #dcfce7;
     color: #15803d;
@@ -238,180 +367,9 @@ td {
     color: #b91c1c;
 }
 
-@media (max-width: 1100px) {
-    .side-nav {
-        width: 80px;
-    }
-
-    .side-nav span,
-    .nav-footer,
-    .logo span {
-        display: none;
-    }
-
-    .main-content {
-        margin-left: 80px;
-        width: calc(100% - 80px);
-    }
-
-    .stats-container {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* --- RESPONSIVE DESIGN (MOBILE FRIENDLY) --- */
-
-@media (max-width: 768px) {
-
-    /* 1. Ajustar el cuerpo para dar espacio a la navegación inferior */
-    body {
-        display: block;
-        /* Quitamos el flex */
-        padding-bottom: 80px;
-        /* Espacio para que el menú no tape nada */
-    }
-
-    /* 2. Convertir Sidebar en Menú Inferior (Tab Bar) */
-    .side-nav {
-        width: 100%;
-        height: 70px;
-        bottom: 0;
-        top: auto;
-        flex-direction: row;
-        padding: 0 20px;
-        justify-content: space-around;
-        align-items: center;
-        border-radius: 20px 20px 0 0;
-    }
-
-    .logo {
-        display: none;
-        /* Escondemos el logo en móvil para ganar espacio */
-    }
-
-    .nav-links {
-        display: flex;
-        width: 100%;
-        justify-content: space-around;
-        margin-bottom: 0;
-    }
-
-    .nav-links a {
-        margin-bottom: 0;
-        padding: 10px;
-        flex-direction: column;
-        gap: 5px;
-        font-size: 0.7rem;
-    }
-
-    .nav-links a i {
-        font-size: 1.2rem;
-    }
-
-    /* 3. Ajustar Contenido Principal */
-    .main-content {
-        margin-left: 0;
-        padding: 20px;
-        width: 100%;
-    }
-
-    .top-bar {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    /* 4. Estadísticas en una sola columna o scroll horizontal */
-    .stats-container {
-        grid-template-columns: 1fr;
-        /* Una tarjeta por fila */
-        gap: 15px;
-    }
-
-    .stat-card {
-        padding: 20px;
-    }
-
-    /* 5. TABLA RESPONSIVA (Truco maestro) */
-    /* Hacemos que la tabla se pueda deslizar lateralmente */
-    .table-wrapper {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        border-radius: 15px;
-    }
-
-    table {
-        min-width: 600px;
-        /* Forzamos ancho mínimo para que no se vea apretado */
-    }
-
-    .table-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    .btn-download {
-        width: 100%;
-        justify-content: center;
-    }
-}
-
-.admin-controls {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    padding: 15px;
-}
-
-.search-bar {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    background: #f1f5f9;
-    padding: 10px 15px;
-    border-radius: 10px;
-}
-
-.search-bar input {
-    background: transparent;
-    border: none;
-    outline: none;
-    margin-left: 10px;
-    width: 100%;
-}
-
-.filter-group {
-    display: flex;
-    gap: 10px;
-}
-
-.btn-filter {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: white;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-.btn-filter.active {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-}
-
-.btn-map {
-    background: #1e293b;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-}
-
-/* Estilos del Modal */
+/* ============================================
+   MODAL
+   ============================================ */
 .modal {
     display: none;
     position: fixed;
@@ -425,45 +383,6 @@ td {
 
 .modal-content {
     background: white;
-    margin: 5% auto;
-    padding: 20px;
-    width: 80%;
-    border-radius: 16px;
-    position: relative;
-}
-
-.close {
-    position: absolute;
-    right: 20px;
-    top: 10px;
-    font-size: 28px;
-    cursor: pointer;
-}
-
-#mapa-global {
-    height: 500px !important;
-    width: 100% !important;
-    background: #e5e7eb;
-    /* Color de fondo mientras carga */
-}
-
-/* Para que los iconos del mapa no salgan con fondo blanco feo */
-.custom-map-marker {
-    background: none !important;
-    border: none !important;
-}
-
-/* Contenedor del Mapa en el Admin */
-#mapa-global {
-    height: 550px !important;
-    width: 100% !important;
-    border-radius: 12px;
-    z-index: 1;
-}
-
-/* Modal Estilizado */
-.modal-content {
-    background: white;
     margin: 2% auto;
     padding: 30px;
     width: 85%;
@@ -471,7 +390,6 @@ td {
     border-radius: 24px;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
     position: relative;
-    border: none;
 }
 
 .close {
@@ -483,34 +401,219 @@ td {
     cursor: pointer;
     z-index: 10;
 }
-/* Estilo para el Filtro de Repartidores */
-.admin-select {
-    background: #f1f5f9;
-    border: 2px solid transparent;
-    padding: 10px 15px;
+
+#mapa-global {
+    height: 500px !important;
+    width: 100% !important;
     border-radius: 12px;
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: var(--text-dark);
-    outline: none;
-    cursor: pointer;
-    transition: 0.3s;
-    min-width: 180px;
-    appearance: none; /* Quita la flecha por defecto */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
-    padding-right: 40px;
+    z-index: 1;
 }
 
-.admin-select:hover {
-    background: #e2e8f0;
+/* ============================================
+   TABLET (max 1100px)
+   ============================================ */
+@media (max-width: 1100px) {
+    .side-nav {
+        width: 80px;
+        padding: 40px 12px;
+    }
+
+    .side-nav span,
+    .nav-footer,
+    .logo span {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 80px;
+        width: calc(100% - 80px);
+        padding: 30px;
+    }
+
+    .stats-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
-.admin-select:focus {
-    border-color: var(--primary-light);
-    background: white;
-    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+/* ============================================
+   MOBILE (max 768px)
+   ============================================ */
+@media (max-width: 768px) {
+
+    /* Body — block layout for bottom nav */
+    body {
+        display: block;
+        padding-bottom: 80px;
+    }
+
+    /* Sidebar → Bottom Tab Bar */
+    .side-nav {
+        width: 100%;
+        height: 65px;
+        bottom: 0;
+        top: auto;
+        flex-direction: row;
+        padding: 0 16px;
+        justify-content: space-around;
+        align-items: center;
+        border-radius: 20px 20px 0 0;
+        z-index: 999;
+    }
+
+    .logo {
+        display: none;
+    }
+
+    .nav-footer {
+        display: none;
+    }
+
+    .nav-links {
+        display: flex;
+        width: 100%;
+        justify-content: space-around;
+        margin-bottom: 0;
+    }
+
+    .nav-links a {
+        margin-bottom: 0;
+        padding: 8px 12px;
+        flex-direction: column;
+        gap: 4px;
+        font-size: 0.65rem;
+        text-align: center;
+    }
+
+    .nav-links a i {
+        font-size: 1.1rem;
+    }
+
+    /* Main content */
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+        width: 100%;
+    }
+
+    /* Top bar */
+    .top-bar {
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 20px;
+        gap: 10px;
+    }
+
+    .top-bar h1 {
+        font-size: 1.4rem;
+    }
+
+    #current-time-admin {
+        font-size: 0.9rem;
+        padding: 8px 12px;
+    }
+
+    /* Stats — horizontal scroll on mobile */
+    .stats-container {
+        display: flex;
+        overflow-x: auto;
+        gap: 12px;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .stats-container::-webkit-scrollbar {
+        display: none;
+    }
+
+    .stat-card {
+        min-width: 160px;
+        flex-shrink: 0;
+        padding: 16px;
+        border-radius: 16px;
+        gap: 12px;
+    }
+
+    .icon-box {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+        border-radius: 12px;
+    }
+
+    .info .number {
+        font-size: 1.5rem;
+    }
+
+    .info .label {
+        font-size: 0.8rem;
+    }
+
+    /* Admin controls — stack vertically */
+    .admin-controls {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .search-bar {
+        min-width: unset;
+    }
+
+    .admin-select {
+        width: 100%;
+        min-width: unset;
+    }
+
+    /* Filter buttons — wrap nicely */
+    .filter-group {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .btn-filter {
+        flex: 1;
+        min-width: 80px;
+        text-align: center;
+        font-size: 0.8rem;
+        padding: 8px 10px;
+    }
+
+    .btn-map {
+        width: 100%;
+        text-align: center;
+        padding: 10px;
+    }
+
+    /* Data section */
+    .data-section {
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    .table-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .btn-download {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Modal fullscreen on mobile */
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+        padding: 16px;
+        border-radius: 16px;
+    }
+
+    #mapa-global {
+        height: 350px !important;
+    }
 }
