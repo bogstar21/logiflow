@@ -339,7 +339,7 @@ async function confirmDelivery(pointId) {
   if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
 
   try {
-    // ✅ Use the global capturedPhotoFile instead of searching the DOM
+    // 1. Si hay foto, la subimos primero
     if (capturedPhotoFile) {
       const base64 = await fileToBase64(capturedPhotoFile);
 
@@ -349,15 +349,20 @@ async function confirmDelivery(pointId) {
         body: JSON.stringify({ base64, deliveryId: pointId })
       });
 
-      capturedPhotoFile = null; // Reset after upload
-    } else {
-      await fetch(`${API_URL}/api/deliveries/${pointId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "delivered" })
-      });
+      capturedPhotoFile = null; // Limpiamos la variable
     }
 
+    // 2. AHORA (fuera del if), hacemos el PUT para cambiar el estado a "delivered"
+    // Esto se ejecutará siempre, haya subido foto o no.
+    const response = await fetch(`${API_URL}/api/deliveries/${pointId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "delivered" })
+    });
+
+    if (!response.ok) throw new Error("No se pudo actualizar el estado en el servidor");
+
+    // 3. Actualizamos el estado local
     const point = deliveryPoints.find(({ id }) => id === pointId);
     if (point) point.status = "delivered";
 
@@ -373,8 +378,8 @@ async function confirmDelivery(pointId) {
 
   } catch (error) {
     console.error("Delivery error:", error);
-    alert("Error al confirmar entrega.");
-    capturedPhotoFile = null; // Cleanup on error
+    alert("Error al confirmar entrega: " + error.message);
+    capturedPhotoFile = null;
     if (btn) btn.innerHTML = '<i class="fas fa-camera"></i> Entregar';
   }
 
