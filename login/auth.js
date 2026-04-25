@@ -139,11 +139,11 @@ async function handleLogin() {
 
     // Redirect
     if (userRole === "owner") {
-      window.location.href = selectedRole === "admin" ? "./admin/index.html" : "./delivery/index.html";
+      window.location.href = selectedRole === "admin" ? "../admin/index.html" : "../delivery/index.html";
     } else if (userRole === "admin") {
-      window.location.href = "./admin/index.html";
+      window.location.href = "../admin/index.html";
     } else if (userRole === "driver") {
-      window.location.href = "./delivery/index.html";
+      window.location.href = "../delivery/index.html";
     }
   } catch (err) {
     console.error("Login error:", err);
@@ -158,5 +158,5 @@ async function handleLogin() {
 // ============================================
 async function handleLogout() {
   await _supabase.auth.signOut();
-  window.location.href = "../login.html";
+  window.location.href = "./login.html";
 }

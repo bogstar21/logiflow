@@ -17,7 +17,7 @@ const _sbGuard = supabase.createClient(SUPABASE_URL_GUARD, SUPABASE_ANON_KEY_GUA
 
     if (!session || (userRole !== "admin" && userRole !== "owner")) {
       console.error("Acceso denegado: Se requiere rol Admin u Owner");
-      window.location.href = "../login.html";
+      window.location.href = "../login/login.html";
       return;
     }
 
@@ -26,7 +26,7 @@ const _sbGuard = supabase.createClient(SUPABASE_URL_GUARD, SUPABASE_ANON_KEY_GUA
 
   } catch (e) {
     console.error("Auth guard error:", e);
-    window.location.replace("../login.html");
+    window.location.replace("../login/login.html");
   }
 })();
 
@@ -42,7 +42,7 @@ async function handleLogout() {
   // Clear all app-related localStorage
   localStorage.removeItem("logiflow_lang");
   localStorage.removeItem("sb-odopvrjvubngjqegwcbu-auth-token");
-  window.location.replace("../login.html");
+  window.location.replace("../login/login.html");
 }
 
 // ============================================
