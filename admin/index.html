@@ -5,17 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LogiFlow Admin | Dashboard</title>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
         rel="stylesheet">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="admin-style.css">
-
 </head>
 
 <body>
@@ -25,53 +20,68 @@
             <span>LogiFlow</span>
         </div>
         <div class="nav-links">
-            <a href="#" class="active"><i class="fas fa-grid-2"></i> Dashboard</a>
-            <a href="#" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Exportar CSV</a>
+            <a href="#" class="active">
+                <i class="fas fa-grid-2"></i>
+                <span data-i18n="dashboard">Dashboard</span>
+            </a>
+            <!-- Language Toggle Button -->
+            <a href="#" onclick="toggleLanguage(); return false;">
+                <i class="fas fa-globe"></i>
+                <span id="lang-btn">🇺🇦 UA</span>
+            </a>
+            <a href="#" onclick="exportCSV(); return false;">
+                <i class="fas fa-file-csv"></i>
+                <span data-i18n="exportCSV">Exportar CSV</span>
+            </a>
         </div>
         <div class="nav-footer">
-            <p>Admin Mode</p>
+            <p data-i18n="adminMode">Admin Mode</p>
         </div>
     </nav>
 
     <main class="main-content">
         <header class="top-bar">
             <div>
-                <h1>Panel de Control</h1>
-                <p id="current-date">Cargando fecha...</p>
+                <h1 data-i18n="panelTitle">Panel de Control</h1>
+                <p id="current-date">Cargando...</p>
             </div>
             <div id="current-time-admin">00:00:00</div>
         </header>
 
         <div class="stats-container">
+            <!-- Total -->
             <div class="stat-card blue">
                 <div class="icon-box"><i class="fas fa-boxes-stacked"></i></div>
                 <div class="info">
-                    <span class="label">Total Paquetes</span>
+                    <span class="label" data-i18n="totalPackages">Total Paquetes</span>
                     <span class="number" id="total-entregas">0</span>
                 </div>
             </div>
+            <!-- Pending -->
             <div class="stat-card orange">
                 <div class="icon-box"><i class="fas fa-truck-ramp-box"></i></div>
                 <div class="info">
-                    <span class="label">Pendientes</span>
+                    <span class="label" data-i18n="pendingPackages">Pendientes</span>
+                    <!-- ✅ ID matches JS: total-pendents -->
                     <span class="number" id="total-pendents">0</span>
                 </div>
             </div>
+            <!-- Delivered -->
             <div class="stat-card green">
                 <div class="icon-box"><i class="fas fa-circle-check"></i></div>
                 <div class="info">
-                    <span class="label">Entregados</span>
+                    <span class="label" data-i18n="deliveredPackages">Entregados</span>
+                    <!-- ✅ ID matches JS: total-fet -->
                     <span class="number" id="total-fet">0</span>
                 </div>
             </div>
         </div>
 
-
         <div class="admin-controls card" style="margin-bottom: 20px;">
             <div class="search-bar">
                 <i class="fas fa-search"></i>
-                <input type="text" id="admin-search" placeholder="Buscar por código, dirección o repartidor..."
-                    onkeyup="filterDeliveries()">
+                <input type="text" id="admin-search" data-i18n-placeholder="searchPlaceholder"
+                    placeholder="Buscar por código, dirección o repartidor..." onkeyup="filterDeliveries()">
             </div>
 
             <select id="filtro-repartidor" class="admin-select" onchange="filterDeliveries()">
@@ -79,35 +89,43 @@
             </select>
 
             <div class="filter-group">
-                <button class="btn-filter active" onclick="setFilter('all', this)">Todos</button>
-                <button class="btn-filter" onclick="setFilter('pending', this)">Pendientes</button>
-                <button class="btn-filter" onclick="setFilter('delivered', this)">Entregados</button>
-                <button class="btn-map" onclick="openGlobalMap()"><i class="fas fa-map-marked-alt"></i> Ver Mapa
-                    Global</button>
+                <button class="btn-filter active" onclick="setFilter('all', this)" data-i18n="filterAll">Todos</button>
+                <button class="btn-filter" onclick="setFilter('pending', this)"
+                    data-i18n="filterPending">Pendientes</button>
+                <button class="btn-filter" onclick="setFilter('delivered', this)"
+                    data-i18n="filterDelivered">Entregados</button>
+                <button class="btn-map" onclick="openGlobalMap()">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <span data-i18n="globalMap">Ver Mapa Global</span>
+                </button>
             </div>
         </div>
 
+        <!-- Map Modal -->
         <div id="modal-mapa" class="modal">
             <div class="modal-content">
                 <span class="close" onclick="closeGlobalMap()">&times;</span>
                 <div id="mapa-global" style="height: 500px; width: 100%; border-radius: 12px;"></div>
             </div>
         </div>
+
         <section class="data-section">
             <div class="table-header">
-                <h3>Monitor de Actividad</h3>
+                <h3 data-i18n="activityMonitor">Monitor de Actividad</h3>
                 <button class="btn-download" onclick="exportCSV()">
-                    <i class="fas fa-download"></i> Descargar Reporte
+                    <i class="fas fa-download"></i>
+                    <span data-i18n="downloadReport">Descargar Reporte</span>
                 </button>
             </div>
             <div class="table-wrapper">
                 <table>
                     <thead>
                         <tr>
-                            <th>ID Paquete</th>
-                            <th>Destino</th>
-                            <th>Estado Actual</th>
-                            <th>Asignado a</th>
+                            <th data-i18n="colId">ID Paquete</th>
+                            <th data-i18n="colDest">Destino</th>
+                            <th data-i18n="colStatus">Estado Actual</th>
+                            <th data-i18n="colPhoto">Foto</th>
+                            <th data-i18n="colAssigned">Asignado a</th>
                         </tr>
                     </thead>
                     <tbody id="admin-table-body"></tbody>
@@ -115,6 +133,7 @@
             </div>
         </section>
     </main>
+
     <script src="admin.js"></script>
 </body>
 

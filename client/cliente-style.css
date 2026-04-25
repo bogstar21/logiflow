@@ -248,8 +248,47 @@ body {
         gap: 10px;
     }
 
+    .header-title h1 {
+        font-size: 1.3rem;
+    }
+
+    .header-title p {
+        margin-left: 0 !important;
+        text-align: center;
+    }
+
+    .header-datetime {
+        justify-content: center;
+    }
+
     .step-name {
         font-size: 0.6rem;
+    }
+
+    .search-group {
+        max-width: 100%;
+    }
+
+    .search-group input {
+        min-width: 0;
+        font-size: 0.9rem;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .container {
+        padding: 0 12px;
+    }
+
+    .btn-action {
+        padding: 14px 16px;
+        font-size: 0.9rem;
+    }
+
+    #track-id {
+        font-size: 0.9rem;
     }
 }
 

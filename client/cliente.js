@@ -6,13 +6,93 @@
 // --- API CONFIG ---
 const API_URL = "https://logiflow-api-07n7.onrender.com";
 
-// --- STATUS CONFIG (code = English, label = Spanish) ---
-const STATUS_CONFIG = {
-  delivered: { label: "✅ Entregado", cssClass: "status-delivered", step: 3 },
-  pending: { label: "🚚 En camino", cssClass: "status-pending", step: 2 },
-  incident: { label: "⚠️ Incidencia", cssClass: "status-incident", step: 2 },
-  tomorrow: { label: "📅 Para mañana", cssClass: "status-tomorrow", step: 1 },
+// ============================================
+// TRANSLATIONS
+// ============================================
+let currentLang = localStorage.getItem("logiflow_lang") || "es";
+
+const TRANSLATIONS = {
+  es: {
+    appSubtitle: "¿Dónde está mi paquete?",
+    searchTitle: "Localizar mi paquete",
+    trackPlaceholder: "Código (Ej: P07)",
+    manageTitle: "Gestionar Entrega",
+    receiveTomorrow: "Recibir mañana",
+    receiveAfternoon: "Recibir hoy por la tarde",
+    stepAlmacen: "Almacén",
+    stepReparto: "Reparto",
+    stepEntregado: "Entregado",
+    evidenceLabel: "Evidencia de entrega:",
+    statusDelivered: "✅ Entregado",
+    statusPending: "🚚 En camino",
+    statusIncident: "⚠️ Incidencia",
+    statusTomorrow: "📅 Para mañana",
+    alertNoCode: "Por favor, introduce un código (Ej: P07)",
+    alertNotFound: "Código no encontrado. Prueba con P01 - P10",
+    alertConnectionError: "Error de conexión. Inténtalo de nuevo.",
+    alertTomorrow: "✅ ¡Notificado! Tu paquete se entregará mañana.",
+    alertAfternoon: "✅ ¡Notificado! Tu paquete llegará esta tarde.",
+  },
+  ua: {
+    appSubtitle: "Де моя посилка?",
+    searchTitle: "Знайти мою посилку",
+    trackPlaceholder: "Код (Напр: P07)",
+    manageTitle: "Керування доставкою",
+    receiveTomorrow: "Отримати завтра",
+    receiveAfternoon: "Отримати сьогодні вдень",
+    stepAlmacen: "Склад",
+    stepReparto: "Доставка",
+    stepEntregado: "Доставлено",
+    evidenceLabel: "Підтвердження доставки:",
+    statusDelivered: "✅ Доставлено",
+    statusPending: "🚚 В дорозі",
+    statusIncident: "⚠️ Інцидент",
+    statusTomorrow: "📅 На завтра",
+    alertNoCode: "Будь ласка, введіть код (Напр: P07)",
+    alertNotFound: "Код не знайдено. Спробуйте P01 - P10",
+    alertConnectionError: "Помилка з'єднання. Спробуйте ще раз.",
+    alertTomorrow: "✅ Повідомлено! Вашу посилку доставлять завтра.",
+    alertAfternoon: "✅ Повідомлено! Ваша посилка прибуде сьогодні вдень.",
+  }
 };
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS["es"][key] || key;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem("logiflow_lang", lang);
+
+  // Update static HTML elements
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder")));
+  });
+
+  // Update lang button text
+  const langText = document.getElementById("lang-text");
+  if (langText) langText.textContent = lang === "es" ? "🇺🇦 UA" : "🇪🇸 ES";
+}
+
+function toggleLanguage() {
+  setLanguage(currentLang === "es" ? "ua" : "es");
+}
+
+// --- STATUS CONFIG (labels resolved dynamically via t()) ---
+function getStatusConfig(status) {
+  const statusMap = {
+    delivered: { labelKey: "statusDelivered", cssClass: "status-delivered", step: 3 },
+    pending: { labelKey: "statusPending", cssClass: "status-pending", step: 2 },
+    incident: { labelKey: "statusIncident", cssClass: "status-incident", step: 2 },
+    tomorrow: { labelKey: "statusTomorrow", cssClass: "status-tomorrow", step: 1 },
+  };
+  const cfg = statusMap[status] || { labelKey: status, cssClass: "", step: 1 };
+  return { label: t(cfg.labelKey), cssClass: cfg.cssClass, step: cfg.step };
+}
 
 // --- APP STATE ---
 let map = null;
@@ -24,6 +104,7 @@ let currentPackageId = null;
 // ============================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  setLanguage(currentLang); // apply saved language
   startClock();
   initMap();
 
@@ -42,7 +123,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function startClock() {
   const el = document.getElementById("current-time");
-  const update = () => { if (el) el.textContent = new Date().toLocaleTimeString("es-ES"); };
+
+  const update = () => {
+    const locale = currentLang === "ua" ? "uk-UA" : "es-ES";
+    const timezone = "Europe/Kyiv"; // UTC+3
+    if (el) {
+      el.textContent = new Date().toLocaleTimeString(locale, {
+        timeZone: timezone,
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+    }
+  };
+
   update();
   setInterval(update, 1000);
 }
@@ -53,7 +145,7 @@ function startClock() {
 
 function initMap() {
   try {
-    map = L.map("map", { zoomControl: false }).setView([39.4697, -0.3774], 13);
+    map = L.map("map", { zoomControl: false }).setView([46.4825, 30.7233], 13);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
       attribution: "©OpenStreetMap ©CartoDB"
     }).addTo(map);
@@ -72,7 +164,7 @@ async function searchPackage() {
   const id = input ? input.value.toUpperCase().trim() : "";
 
   if (!id) {
-    alert("Por favor, introduce un código (Ej: P07)");
+    alert(t("alertNoCode"));
     return;
   }
 
@@ -82,14 +174,14 @@ async function searchPackage() {
     if (btnTrack) btnTrack.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
     // Fetch from real API
-    const response = await fetch(`${API_URL}/api/deliveries/${id}`);
+    const response = await fetch(`${API_URL}/api/deliveries/${encodeURIComponent(id)}`);
     const { data, success } = await response.json();
 
     // Restore button
     if (btnTrack) btnTrack.innerHTML = '<i class="fas fa-arrow-right"></i>';
 
     if (!success || !data) {
-      alert("Código no encontrado. Prueba con P01 - P10");
+      alert(t("alertNotFound"));
       return;
     }
 
@@ -110,7 +202,7 @@ async function searchPackage() {
 
   } catch (error) {
     console.error("Search error:", error);
-    alert("Error de conexión. Inténtalo de nuevo.");
+    alert(t("alertConnectionError"));
   }
 }
 
@@ -119,9 +211,7 @@ async function searchPackage() {
 // ============================================
 
 function renderPackageStatus({ id, address, status, photo_url }) {
-  const { label, cssClass, step } = STATUS_CONFIG[status] || {
-    label: status, cssClass: "", step: 1
-  };
+  const { label, cssClass, step } = getStatusConfig(status);
 
   const container = document.getElementById("status-container");
   if (container) container.style.display = "block";
@@ -214,8 +304,8 @@ async function requestDelay(option) {
 
     if (success) {
       const message = option === "tomorrow"
-        ? "✅ ¡Notificado! Tu paquete se entregará mañana."
-        : "✅ ¡Notificado! Tu paquete llegará esta tarde.";
+        ? t("alertTomorrow")
+        : t("alertAfternoon");
 
       alert(message);
       await searchPackage(); // refresh from API
@@ -223,6 +313,6 @@ async function requestDelay(option) {
 
   } catch (error) {
     console.error("Delay error:", error);
-    alert("Error de conexión. Inténtalo de nuevo.");
+    alert(t("alertConnectionError"));
   }
 }

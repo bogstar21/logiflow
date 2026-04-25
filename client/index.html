@@ -19,10 +19,15 @@
             <div class="header-flex">
                 <div class="header-title">
                     <h1><i class="fas fa-shipping-fast"></i> LogiFlow</h1>
-                    <p style="color: #64748b; font-size: 0.85rem; margin-left: 45px;">Donde esta mi paquete?</p>
+                    <p data-i18n="appSubtitle" style="color: #64748b; font-size: 0.85rem; margin-left: 45px;">¿Dónde
+                        está mi paquete?</p>
                 </div>
-                <div class="header-datetime">
+                <div class="header-datetime" style="display: flex; align-items: center; gap: 20px;">
                     <div id="current-time">00:00:00</div>
+                    <button id="lang-btn" onclick="toggleLanguage()"
+                        style="background: #334155; border: 1px solid #475569; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
+                        <span id="lang-text">🇺🇦 UA</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -31,10 +36,12 @@
     <main class="container">
         <div class="management-grid">
             <section class="card">
-                <h3 class="section-title"><i class="fas fa-search"></i> Localizar mi paquete</h3>
+                <h3 class="section-title"><i class="fas fa-search"></i> <span data-i18n="searchTitle">Localizar mi
+                        paquete</span></h3>
                 <div class="card-content">
                     <div class="search-group">
-                        <input type="text" id="track-id" placeholder="Codi (Ex: P07)">
+                        <input type="text" id="track-id" data-i18n-placeholder="trackPlaceholder"
+                            placeholder="Código (Ej: P07)">
                         <button id="btn-track" class="btn-primary" onclick="searchPackage()">
                             <i class="fas fa-arrow-right"></i>
                         </button>
@@ -43,26 +50,28 @@
 
                 <div id="status-container"
                     style="display: none; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 20px;">
-                    <div id="status-label" class="status-badge" style="margin-top: 15px;">En camino</div>
+                    <div id="status-label" class="status-badge" style="margin-top: 15px;" data-i18n="statusPending">🚚
+                        En camino</div>
                     <p id="address-text" style="margin-top: 15px; font-weight: 500; color: #1e293b;"></p>
 
                     <div class="stepper-wrapper" style="margin-top: 30px;">
                         <div class="stepper-item" id="step-almacen">
                             <div class="step-counter"><i class="fas fa-warehouse"></i></div>
-                            <div class="step-name">Almacén</div>
+                            <div class="step-name" data-i18n="stepAlmacen">Almacén</div>
                         </div>
                         <div class="stepper-item" id="step-reparto">
                             <div class="step-counter"><i class="fas fa-truck"></i></div>
-                            <div class="step-name">Reparto</div>
+                            <div class="step-name" data-i18n="stepReparto">Reparto</div>
                         </div>
                         <div class="stepper-item" id="step-entregado">
                             <div class="step-counter"><i class="fas fa-home"></i></div>
-                            <div class="step-name">Entregado</div>
+                            <div class="step-name" data-i18n="stepEntregado">Entregado</div>
                         </div>
                     </div>
 
                     <div id="foto-evidencia" style="display: none; margin-top: 25px; text-align: center;">
-                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;">Evidencia de entrega:</p>
+                        <p style="font-size: 0.8rem; color: #64748b; margin-bottom: 10px;" data-i18n="evidenceLabel">
+                            Evidencia de entrega:</p>
                         <img id="img-evidencia" src=""
                             style="width: 100%; border-radius: 12px; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
                     </div>
@@ -70,16 +79,17 @@
             </section>
 
             <section class="card" id="actions-card" style="display: none;">
-                <h3 class="section-title"><i class="fas fa-calendar-alt"></i> Gestionar Entrega</h3>
+                <h3 class="section-title"><i class="fas fa-calendar-alt"></i> <span data-i18n="manageTitle">Gestionar
+                        Entrega</span></h3>
                 <div class="card-content">
                     <div style="display: grid; gap: 12px;">
                         <button class="btn-action" onclick="requestDelay('tomorrow')">
                             <i class="fas fa-bed"></i>
-                            <span>Recibir mañana</span>
+                            <span data-i18n="receiveTomorrow">Recibir mañana</span>
                         </button>
                         <button class="btn-action" onclick="requestDelay('afternoon')">
                             <i class="fas fa-mug-hot"></i>
-                            <span>Recibir hoy por la tarde</span>
+                            <span data-i18n="receiveAfternoon">Recibir hoy por la tarde</span>
                         </button>
                     </div>
                 </div>

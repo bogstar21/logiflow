@@ -1,14 +1,12 @@
 // ============================================
 // LOGIFLOW — Driver App
-// Data source: Real API (logiflow-api on Render)
 // ============================================
 
-// --- API CONFIG ---
 const API_URL = "https://logiflow-api-07n7.onrender.com";
 
-// --- BASE LOCATION (Valencia depot) ---
-const BASE_LOCATION = { lat: 39.4632, lng: -0.3541 };
-const VALENCIA_COORDS = [39.4699, -0.3763];
+// --- ODESSA COORDINATES ---
+const DEFAULT_COORDS = [46.4825, 30.7233];
+const BASE_LOCATION = { lat: 46.4825, lng: 30.7233 };
 
 // --- APP STATE ---
 let map, trafficLayer, markersLayer, routeLayer;
@@ -18,10 +16,105 @@ let currentDriverId = null;
 let capturedPhotoFile = null;
 
 // ============================================
-// INIT
+// TRANSLATIONS
 // ============================================
+let currentLang = localStorage.getItem("logiflow_lang") || "es";
 
+const TRANSLATIONS = {
+  es: {
+    appTitle: "Panel de Control de Reparto",
+    access: "Acceso",
+    driverIdPlaceholder: "ID Repartidor (Ej: 001)",
+    syncRoute: "Sincronizar Mi Ruta",
+    routeLoaded: "RUTA CARGADA",
+    stops: "Paradas",
+    rain: "Lluvia",
+    traffic: "Tráfico",
+    openGoogleMaps: "ABRIR RUTA COMPLETA",
+    deliveryOrder: "Orden de Entrega",
+    noRouteMsg: "Introduce tu ID para recibir la ruta...",
+    enterDriverId: "Por favor, introduce tu ID de repartidor (Ej: 001)",
+    loading: "Cargando...",
+    driverNotFound: "ID no encontrado. Prueba: 001, 002 o 003",
+    error: "Error de conexión. Inténtalo de nuevo.",
+    stop: "PARADA",
+    delivered_btn: "Entregado",
+    deliver: "Entregar",
+    confirmDelivery: "¿Confirmar entrega de",
+    confirm: "✅ Confirmar",
+    cancel: "❌ Cancelar",
+    uploading: "Subiendo...",
+    incident: "Incidencia",
+    incidentPrompt: "Motivo de la incidencia (Ej: Cliente ausente, Dirección incorrecta):",
+    incidentSaved: "⚠️ Incidencia registrada.",
+    noRouteAlert: "Primero sincroniza tu ruta.",
+    noPendingAlert: "¡No hay entregas pendientes!",
+  },
+  ua: {
+    appTitle: "Панель керування доставкою",
+    access: "Вхід",
+    driverIdPlaceholder: "ID Кур'єра (Напр: DRV-001)",
+    syncRoute: "Синхронізувати маршрут",
+    routeLoaded: "МАРШРУТ ЗАВАНТАЖЕНО",
+    stops: "Зупинки",
+    rain: "Дощ",
+    traffic: "Затори",
+    openGoogleMaps: "ВІДКРИТИ ПОВНИЙ МАРШРУТ",
+    deliveryOrder: "Порядок доставки",
+    noRouteMsg: "Введіть ваш ID для отримання маршруту...",
+    enterDriverId: "Будь ласка, введіть ваш ID кур'єра (Напр: DRV-001)",
+    loading: "Завантаження...",
+    driverNotFound: "ID не знайдено. Спробуйте: DRV-001, DRV-002 або DRV-003",
+    error: "Помилка з'єднання. Спробуйте ще раз.",
+    stop: "ЗУПИНКА",
+    delivered_btn: "Доставлено",
+    deliver: "Доставити",
+    confirmDelivery: "Підтвердити доставку",
+    confirm: "✅ Підтвердити",
+    cancel: "❌ Скасувати",
+    uploading: "Завантаження...",
+    incident: "Інцидент",
+    incidentPrompt: "Причина інциденту (Напр: Клієнт відсутній, Неправильна адреса):",
+    incidentSaved: "⚠️ Інцидент зареєстровано.",
+    noRouteAlert: "Спочатку синхронізуйте маршрут.",
+    noPendingAlert: "Немає очікуваних доставок!",
+  }
+};
+
+function t(key) {
+  return TRANSLATIONS[currentLang][key] || TRANSLATIONS["es"][key] || key;
+}
+
+function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem("logiflow_lang", lang);
+
+  // Update static HTML elements
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder")));
+  });
+
+  // Update lang button
+  const btn = document.getElementById("lang-btn");
+  if (btn) btn.textContent = lang === "es" ? "🇺🇦 UA" : "🇪🇸 ES";
+
+  // Re-render dynamic content
+  if (deliveryPoints.length > 0) renderRanking();
+}
+
+function toggleLanguage() {
+  setLanguage(currentLang === "es" ? "ua" : "es");
+}
+
+// ============================================
+// INIT — single DOMContentLoaded!
+// ============================================
 document.addEventListener("DOMContentLoaded", () => {
+  setLanguage(currentLang); // apply saved language
   initMap();
   startClock();
   loadWeather();
@@ -45,23 +138,32 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ============================================
-// 1. CLOCK
+// 1. CLOCK — Ukraine timezone
 // ============================================
-
 function startClock() {
   const el = document.getElementById("current-time");
-  const update = () => { if (el) el.textContent = new Date().toLocaleTimeString("es-ES"); };
+
+  const update = () => {
+    const locale = currentLang === "ua" ? "uk-UA" : "es-ES";
+    const timezone = "Europe/Kyiv"; // UTC+3
+    if (el) {
+      el.textContent = new Date().toLocaleTimeString(locale, {
+        timeZone: timezone,
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+    }
+  };
+
   update();
   setInterval(update, 1000);
 }
 
 // ============================================
-// 2. MAP
+// 2. MAP — Odessa center
 // ============================================
-
 function initMap() {
   try {
-    map = L.map("map", { zoomControl: false }).setView(VALENCIA_COORDS, 13);
+    map = L.map("map", { zoomControl: false }).setView(DEFAULT_COORDS, 13);
     L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
       attribution: "©OpenStreetMap ©CartoDB"
     }).addTo(map);
@@ -77,78 +179,66 @@ function initMap() {
 }
 
 // ============================================
-// 3. LOAD DRIVER ROUTE — now calls real API!
+// 3. LOAD DRIVER ROUTE
 // ============================================
-
 async function loadDriverRoute() {
   const input = document.getElementById("repartidor-id");
   const btn = document.getElementById("btn-cargar-ruta");
   const driverId = input ? input.value.trim().toUpperCase() : "";
 
   if (!driverId) {
-    alert("Introduce tu ID de repartidor (Ej: DRV-001)");
+    alert(t("enterDriverId"));
     return;
   }
 
   try {
-    // Show loading state
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t("loading")}`;
     }
 
-    // Fetch from real API
     const response = await fetch(`${API_URL}/api/driver/${driverId}`);
     const { data, success } = await response.json();
 
     if (!success || !data || data.length === 0) {
-      alert("ID no encontrado. Prueba: DRV-001, DRV-002 o DRV-003");
+      alert(t("driverNotFound"));
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar Mi Ruta';
+        btn.innerHTML = `<i class="fas fa-sync-alt"></i> <span data-i18n="syncRoute">${t("syncRoute")}</span>`;
       }
       return;
     }
 
     currentDriverId = driverId;
 
-    // Map Supabase column names to app names
     deliveryPoints = data.map(({ delivery_id, address, status, lat, lng }) => ({
-      id: delivery_id,
-      address,
-      status,
-      lat,
-      lng
+      id: delivery_id, address, status, lat, lng
     }));
 
-    // Update counter
     const countEl = document.getElementById("delivery-count");
     if (countEl) countEl.textContent = deliveryPoints.length;
 
-    // Optimize route and render
     optimizeRoute();
 
-    // Update button
     if (btn) {
-      btn.innerHTML = '<i class="fas fa-check"></i> RUTA CARGADA';
+      btn.innerHTML = `<i class="fas fa-check"></i> ${t("routeLoaded")}`;
       btn.style.background = "#10b981";
       btn.disabled = false;
     }
 
   } catch (error) {
     console.error("Route loading error:", error);
-    alert("Error de conexión. Inténtalo de nuevo.");
+    alert(t("error"));
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar Mi Ruta';
+      btn.innerHTML = `<i class="fas fa-sync-alt"></i> ${t("syncRoute")}`;
     }
   }
 }
 
 // ============================================
-// 4. ROUTE OPTIMIZATION (Nearest Neighbor)
+// 4. ROUTE OPTIMIZATION
 // ============================================
-
 function optimizeRoute() {
   if (deliveryPoints.length === 0) return;
 
@@ -165,13 +255,9 @@ function optimizeRoute() {
 
     remaining.forEach(({ lat, lng }, index) => {
       const distance = Math.sqrt(
-        Math.pow(lat - currentPos.lat, 2) +
-        Math.pow(lng - currentPos.lng, 2)
+        Math.pow(lat - currentPos.lat, 2) + Math.pow(lng - currentPos.lng, 2)
       );
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestIndex = index;
-      }
+      if (distance < minDistance) { minDistance = distance; nearestIndex = index; }
     });
 
     const nearest = remaining.splice(nearestIndex, 1)[0];
@@ -180,7 +266,6 @@ function optimizeRoute() {
   }
 
   deliveryPoints = [...delivered, ...optimized];
-
   calculateETA();
   renderRanking();
   renderMapMarkers();
@@ -190,7 +275,6 @@ function optimizeRoute() {
 // ============================================
 // 5. ETA CALCULATION
 // ============================================
-
 function calculateETA() {
   const now = new Date();
   let accumulatedTime = now;
@@ -198,14 +282,17 @@ function calculateETA() {
 
   deliveryPoints.forEach(point => {
     const distance = Math.sqrt(
-      Math.pow(point.lat - lastPos.lat, 2) +
-      Math.pow(point.lng - lastPos.lng, 2)
+      Math.pow(point.lat - lastPos.lat, 2) + Math.pow(point.lng - lastPos.lng, 2)
     ) * 111;
 
     const minutesPerStop = (distance * 5) + 8;
     accumulatedTime = new Date(accumulatedTime.getTime() + minutesPerStop * 60000);
 
-    point.eta = accumulatedTime.toLocaleTimeString("es-ES", {
+    const locale = currentLang === "ua" ? "uk-UA" : "es-ES";
+    const timezone = "Europe/Kyiv";
+
+    point.eta = accumulatedTime.toLocaleTimeString(locale, {
+      timeZone: timezone,
       hour: "2-digit", minute: "2-digit"
     });
 
@@ -214,14 +301,18 @@ function calculateETA() {
 }
 
 // ============================================
-// 6. RENDER RANKING LIST
+// 6. RENDER RANKING
 // ============================================
-
 function renderRanking() {
   const container = document.getElementById("delivery-ranking");
   if (!container) return;
 
   const visiblePoints = deliveryPoints.filter(({ id }) => id !== "START" && id !== "END");
+
+  if (visiblePoints.length === 0) {
+    container.innerHTML = `<p class="no-data">${t("noRouteMsg")}</p>`;
+    return;
+  }
 
   container.innerHTML = visiblePoints.map((point, index) => {
     const { id, address, status, eta, inTrafficZone } = point;
@@ -230,24 +321,26 @@ function renderRanking() {
 
     const borderColor = inTrafficZone ? "#ef4444" : "#10b981";
     const btnIcon = isDelivered ? "fa-check-double" : "fa-camera";
-    const btnText = isDelivered ? "Entregado" : "Entregar";
+    const btnText = isDelivered ? t("delivered_btn") : t("deliver");
     const btnClass = isDelivered ? "btn-skip-modern" : "btn-success";
     const origin = `${BASE_LOCATION.lat},${BASE_LOCATION.lng}`;
 
     return `
       <div class="ranking-item" id="item-${id}"
-           style="opacity:${isDelivered ? 0.6 : 1}; border-left: 5px solid ${borderColor}">
+           style="opacity:${isDelivered ? 0.6 : 1}; border-left:5px solid ${borderColor};
+                  padding:15px; margin-bottom:12px; background:white;
+                  border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
         <div style="display:flex; justify-content:space-between; align-items:start;">
           <div>
             <span style="background:#eef2ff; color:#6366f1; padding:4px 10px;
                          border-radius:8px; font-size:0.75rem; font-weight:800;
                          margin-bottom:8px; display:inline-block;">
-              PARADA #${index + 1}
+              ${t("stop")} #${index + 1}
             </span>
             <br>
-            <b>${id}</b> ${isIncident ? "⚠️" : ""}
+            <b style="font-size:1.1rem;">${id}</b> ${isIncident ? "⚠️" : ""}
             <br>
-            <small><i class="fas fa-location-dot"></i> ${address}</small>
+            <small style="color:#64748b;"><i class="fas fa-location-dot"></i> ${address}</small>
           </div>
           <div style="background:#fffbeb; color:#b45309; padding:6px 10px;
                       border-radius:10px; font-size:0.85rem; font-weight:700;">
@@ -255,21 +348,24 @@ function renderRanking() {
           </div>
         </div>
         <div style="display:flex; gap:8px; margin-top:15px;">
-          <button id="btn-cam-${id}"
-                  class="btn-action ${btnClass}"
+          <button id="btn-cam-${id}" class="btn-action ${btnClass}"
                   onclick="openCamera('${id}')"
-                  style="flex:2;" ${isDelivered ? "disabled" : ""}>
+                  style="flex:2; border:none; padding:12px; border-radius:8px;
+                         font-weight:bold; cursor:pointer; display:flex;
+                         align-items:center; justify-content:center; gap:8px;"
+                  ${isDelivered ? "disabled" : ""}>
             <i class="fas ${btnIcon}"></i> ${btnText}
           </button>
-          <button class="btn-action"
-                  onclick="registerIncident('${id}')"
-                  style="background:#f59e0b; color:white; flex:0.6;"
-                  title="Incidencia">
+          <button class="btn-action" onclick="registerIncident('${id}')"
+                  style="background:#f59e0b; color:white; border:none;
+                         flex:0.6; border-radius:8px; cursor:pointer;"
+                  title="${t("incident")}">
             <i class="fas fa-exclamation-triangle"></i>
           </button>
           <button class="btn-action"
                   onclick="window.open('https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${point.lat},${point.lng}&travelmode=driving', '_blank')"
-                  style="background:#34a853; color:white; flex:0.6;">
+                  style="background:#34a853; color:white; border:none;
+                         flex:0.6; border-radius:8px; cursor:pointer;">
             <i class="fas fa-location-arrow"></i>
           </button>
         </div>
@@ -279,9 +375,8 @@ function renderRanking() {
 }
 
 // ============================================
-// 7. CAMERA + PHOTO PREVIEW + MARK DELIVERED
+// 7. CAMERA + PHOTO PREVIEW
 // ============================================
-
 function openCamera(pointId) {
   selectedPhotoPointId = pointId;
   const input = document.getElementById("photo-input");
@@ -291,8 +386,6 @@ function openCamera(pointId) {
 function handlePhotoCapture(e) {
   const file = e.target.files[0];
   if (!file || !selectedPhotoPointId) return;
-
-  // ✅ Save the file globally before clearing the input
   capturedPhotoFile = file;
 
   const reader = new FileReader();
@@ -306,71 +399,61 @@ function handlePhotoCapture(e) {
              style="max-width:100%; max-height:60vh; border-radius:12px;
                     border:3px solid #10b981; margin-bottom:20px;">
         <p style="color:white; margin-bottom:15px; font-weight:bold;">
-          ¿Confirmar entrega de ${selectedPhotoPointId}?
+          ${t("confirmDelivery")} ${selectedPhotoPointId}?
         </p>
         <div style="display:flex; gap:12px;">
           <button onclick="confirmDelivery('${selectedPhotoPointId}')"
                   style="background:#10b981; color:white; border:none;
                          padding:12px 24px; border-radius:8px;
                          font-weight:bold; cursor:pointer; font-size:1rem;">
-            ✅ Confirmar
+            ${t("confirm")}
           </button>
           <button onclick="cancelPhotoPreview()"
                   style="background:#ef4444; color:white; border:none;
                          padding:12px 24px; border-radius:8px;
                          font-weight:bold; cursor:pointer; font-size:1rem;">
-            ❌ Cancelar
+            ${t("cancel")}
           </button>
         </div>
       </div>
     `;
     document.body.insertAdjacentHTML("beforeend", previewHTML);
   };
-
   reader.readAsDataURL(file);
-  e.target.value = ""; // Clear input safely
+  e.target.value = "";
 }
 
 async function confirmDelivery(pointId) {
   const modal = document.getElementById("photo-preview-modal");
   if (modal) modal.remove();
 
-  console.log("capturedPhotoFile:", capturedPhotoFile);
-  console.log("pointId:", pointId);
   const btn = document.getElementById(`btn-cam-${pointId}`);
-  if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subiendo...';
+  if (btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${t("uploading")}`;
 
   try {
-    // 1. Si hay foto, la subimos primero
     if (capturedPhotoFile) {
       const base64 = await compressImage(capturedPhotoFile);
-
       await fetch(`${API_URL}/api/photos/upload`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ base64, deliveryId: pointId })
       });
-
-      capturedPhotoFile = null; // Limpiamos la variable
+      capturedPhotoFile = null;
     }
 
-    // 2. AHORA (fuera del if), hacemos el PUT para cambiar el estado a "delivered"
-    // Esto se ejecutará siempre, haya subido foto o no.
     const response = await fetch(`${API_URL}/api/deliveries/${pointId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "delivered" })
     });
+    if (!response.ok) throw new Error("Update failed");
 
-    if (!response.ok) throw new Error("No se pudo actualizar el estado en el servidor");
-
-    // 3. Actualizamos el estado local
     const point = deliveryPoints.find(({ id }) => id === pointId);
     if (point) point.status = "delivered";
 
     if (btn) {
       btn.style.background = "#10b981";
-      btn.innerHTML = '<i class="fas fa-check"></i> ENTREGADO';
+      btn.innerHTML = `<i class="fas fa-check"></i> ${t("delivered_btn").toUpperCase()}`;
       btn.disabled = true;
     }
 
@@ -380,22 +463,12 @@ async function confirmDelivery(pointId) {
 
   } catch (error) {
     console.error("Delivery error:", error);
-    alert("Error al confirmar entrega: " + error.message);
+    alert(t("error"));
     capturedPhotoFile = null;
-    if (btn) btn.innerHTML = '<i class="fas fa-camera"></i> Entregar';
+    if (btn) btn.innerHTML = `<i class="fas fa-camera"></i> ${t("deliver")}`;
   }
 
   selectedPhotoPointId = null;
-}
-
-// Helper — converts file to base64
-function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
 }
 
 function cancelPhotoPreview() {
@@ -405,11 +478,10 @@ function cancelPhotoPreview() {
 }
 
 // ============================================
-// 8. INCIDENTS — now calls real API!
+// 8. INCIDENTS
 // ============================================
-
 async function registerIncident(pointId) {
-  const reason = prompt("Motivo de la incidencia (Ej: Cliente ausente, Dirección incorrecta):");
+  const reason = prompt(t("incidentPrompt"));
   if (!reason) return;
 
   try {
@@ -420,12 +492,9 @@ async function registerIncident(pointId) {
     });
 
     const point = deliveryPoints.find(({ id }) => id === pointId);
-    if (point) {
-      point.status = "incident";
-      point.incidentReason = reason;
-    }
+    if (point) { point.status = "incident"; point.incidentReason = reason; }
 
-    alert("⚠️ Incidencia registrada.");
+    alert(t("incidentSaved"));
     renderRanking();
     renderMapMarkers();
 
@@ -437,52 +506,36 @@ async function registerIncident(pointId) {
 // ============================================
 // 9. MAP MARKERS
 // ============================================
-
 function renderMapMarkers() {
   markersLayer.clearLayers();
-
   deliveryPoints.forEach(({ id, lat, lng, address, status }) => {
-    const colorMap = {
-      delivered: "#64748b",
-      pending: "#38bdf8",
-      incident: "#f59e0b",
-    };
+    const colorMap = { delivered: "#64748b", pending: "#38bdf8", incident: "#f59e0b" };
     const color = colorMap[status] || "#38bdf8";
-
-    L.circleMarker([lat, lng], {
-      radius: 8, fillColor: color,
-      color: "white", weight: 2, fillOpacity: 1
-    })
+    L.circleMarker([lat, lng], { radius: 8, fillColor: color, color: "white", weight: 2, fillOpacity: 1 })
       .addTo(markersLayer)
       .bindTooltip(`<b>${id}</b><br>${address}`);
   });
 }
 
 // ============================================
-// 10. ROUTE DRAWING (OSRM)
+// 10. ROUTE DRAWING
 // ============================================
-
 async function drawRoute() {
   routeLayer.clearLayers();
   if (deliveryPoints.length < 2) return;
 
   const coords = deliveryPoints.map(({ lng, lat }) => `${lng},${lat}`).join(";");
-
   try {
     const response = await fetch(
       `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
     );
     const data = await response.json();
-
     if (data.code === "Ok") {
       L.geoJSON(data.routes[0].geometry, {
         style: { color: "#38bdf8", weight: 4, opacity: 0.8 }
       }).addTo(routeLayer);
-
       const group = new L.featureGroup(markersLayer.getLayers());
-      if (group.getLayers().length > 0) {
-        map.fitBounds(group.getBounds().pad(0.1));
-      }
+      if (group.getLayers().length > 0) map.fitBounds(group.getBounds().pad(0.1));
     }
   } catch (e) {
     console.error("Route drawing error:", e);
@@ -490,70 +543,25 @@ async function drawRoute() {
 }
 
 // ============================================
-// 11. TRAFFIC LAYER (Valencia Open Data)
+// 11. TRAFFIC — disabled for Odessa
 // ============================================
-
 async function loadTraffic() {
   const statusEl = document.getElementById("traffic-status");
-
-  try {
-    const url = "https://valencia.opendatasoft.com/api/explore/v2.1/catalog/datasets/estat-transit-temps-real-estado-trafico-tiempo-real/exports/geojson";
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Traffic API error");
-    const data = await response.json();
-
-    trafficLayer.clearLayers();
-
-    L.geoJSON(data, {
-      style: ({ properties: { estado } }) => ({
-        color: estado >= 3 ? "#ef4444" : estado === 2 ? "#eab308" : "#22c55e",
-        weight: 5,
-        opacity: 0.9,
-        lineCap: "round"
-      })
-    }).addTo(trafficLayer);
-
-    if (deliveryPoints.length > 0) {
-      deliveryPoints.forEach(point => {
-        point.inTrafficZone = data.features.some(({ properties, geometry }) => {
-          if (properties.estado < 3) return false;
-          const [lng, lat] = geometry.coordinates[0][0];
-          const distance = Math.sqrt(
-            Math.pow(point.lat - lat, 2) +
-            Math.pow(point.lng - lng, 2)
-          );
-          return distance < 0.005;
-        });
-      });
-      optimizeRoute();
-    }
-
-    const heavyTraffic = data.features.filter(({ properties }) => properties.estado >= 3).length;
-    if (statusEl) {
-      statusEl.innerHTML = heavyTraffic > 15
-        ? `<span style="color:#ef4444;">⚠️ ATASCO</span>`
-        : `<span style="color:#22c55e;">LIVE</span>`;
-    }
-
-  } catch (e) {
-    console.error("Traffic error:", e);
-    if (statusEl) statusEl.textContent = "OFFLINE";
-  }
+  if (statusEl) statusEl.textContent = "N/A";
 }
 
 // ============================================
-// 12. WEATHER (Open-Meteo)
+// 12. WEATHER — Odessa coordinates
 // ============================================
-
 async function loadWeather() {
   try {
+    // Odessa: lat=46.4825, lng=30.7233
     const response = await fetch(
-      "https://api.open-meteo.com/v1/forecast?latitude=39.4699&longitude=-0.3763&hourly=precipitation_probability&forecast_days=1"
+      "https://api.open-meteo.com/v1/forecast?latitude=46.4825&longitude=30.7233&hourly=precipitation_probability&forecast_days=1"
     );
     const data = await response.json();
     const currentHour = new Date().getHours();
     const rainProb = data.hourly.precipitation_probability[currentHour] || 0;
-
     const el = document.getElementById("rain-prob");
     if (el) el.textContent = `${rainProb}%`;
   } catch (e) {
@@ -562,34 +570,26 @@ async function loadWeather() {
 }
 
 // ============================================
-// 13. GOOGLE MAPS FULL ROUTE
+// 13. GOOGLE MAPS ROUTE
 // ============================================
-
 function openGoogleMapsRoute() {
-  if (deliveryPoints.length === 0) {
-    alert("Primero sincroniza tu ruta.");
-    return;
-  }
-
+  if (deliveryPoints.length === 0) { alert(t("noRouteAlert")); return; }
   const pending = deliveryPoints.filter(({ status }) => status !== "delivered");
-
-  if (pending.length === 0) {
-    alert("¡No hay entregas pendientes!");
-    return;
-  }
+  if (pending.length === 0) { alert(t("noPendingAlert")); return; }
 
   const origin = `${BASE_LOCATION.lat},${BASE_LOCATION.lng}`;
   const destination = `${pending[pending.length - 1].lat},${pending[pending.length - 1].lng}`;
   const waypoints = pending.slice(0, -1).map(({ lat, lng }) => `${lat},${lng}`).join("|");
 
-  const url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`;
-  window.open(url, "_blank");
+  window.open(
+    `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&waypoints=${waypoints}&travelmode=driving`,
+    "_blank"
+  );
 }
 
 // ============================================
-// 14. MAP LAYER TOGGLES
+// 14. MAP TOGGLES
 // ============================================
-
 function toggleTraffic() {
   const btn = document.getElementById("toggle-traffic");
   if (map.hasLayer(trafficLayer)) {
@@ -598,7 +598,6 @@ function toggleTraffic() {
   } else {
     map.addLayer(trafficLayer);
     if (btn) btn.classList.add("active");
-    loadTraffic();
   }
 }
 
@@ -613,32 +612,22 @@ function toggleRoute() {
   }
 }
 
-// Compress image before uploading
-function compressImage(file, maxSizeMB = 0.3) {
+// ============================================
+// 15. IMAGE COMPRESSION
+// ============================================
+function compressImage(file) {
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-
-        // Resize to max 800px wide
-        let width = img.width;
-        let height = img.height;
-        if (width > 800) {
-          height = (height * 800) / width;
-          width = 800;
-        }
-
+        let width = img.width, height = img.height;
+        if (width > 800) { height = (height * 800) / width; width = 800; }
         canvas.width = width;
         canvas.height = height;
-
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // Compress to JPEG 0.7 quality
-        const compressed = canvas.toDataURL("image/jpeg", 0.7);
-        resolve(compressed);
+        canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
       };
       img.src = e.target.result;
     };
