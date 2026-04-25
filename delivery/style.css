@@ -303,3 +303,26 @@ body {
 .map-btn:hover {
     transform: translateY(-2px);
 }
+
+/* ============================================
+   LOGOUT BUTTON
+   ============================================ */
+.btn-logout {
+    background: #334155;
+    color: white;
+    border: 1px solid #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    transition: all 0.3s;
+}
+
+.btn-logout:hover {
+    background: #1e293b;
+    border-color: #38bdf8;
+}

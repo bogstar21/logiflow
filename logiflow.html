@@ -4,11 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>LogiFlow | Logistics Ecosystem</title>
-
     <link rel="icon" type="image/png" href="logo.png">
-
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -16,6 +13,9 @@
     <style>
         :root {
             --primary: #6366f1;
+            --driver-color: #38bdf8;
+            --admin-color: #a855f7;
+            --client-color: #10b981;
             --bg: #0f172a;
             --card-bg: #1e293b;
             --text-main: #f8fafc;
@@ -31,13 +31,14 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
         .hub-container {
             text-align: center;
             max-width: 1000px;
             padding: 20px;
+            z-index: 2;
         }
 
         .header {
@@ -45,7 +46,7 @@
         }
 
         .logo-large {
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 800;
             color: var(--primary);
             margin-bottom: 10px;
@@ -53,15 +54,6 @@
             align-items: center;
             justify-content: center;
             gap: 15px;
-        }
-
-        .logo-large i {
-            filter: drop-shadow(0 0 15px rgba(99, 102, 241, 0.6));
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 1.1rem;
         }
 
         .grid {
@@ -81,13 +73,29 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Colores por Rol en Hover */
+        .card-driver:hover {
+            border-color: var(--driver-color);
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.2);
+        }
+
+        .card-admin:hover {
+            border-color: var(--admin-color);
+            box-shadow: 0 10px 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .card-client:hover {
+            border-color: var(--client-color);
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
         }
 
         .app-card:hover {
-            transform: translateY(-15px);
-            background: rgba(99, 102, 241, 0.1);
-            border-color: var(--primary);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(-12px);
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .icon-circle {
@@ -100,14 +108,36 @@
             justify-content: center;
             font-size: 2.5rem;
             margin-bottom: 20px;
-            color: var(--primary);
-            transition: 0.3s;
+            transition: 0.4s;
+        }
+
+        .card-driver .icon-circle {
+            color: var(--driver-color);
+        }
+
+        .card-admin .icon-circle {
+            color: var(--admin-color);
+        }
+
+        .card-client .icon-circle {
+            color: var(--client-color);
         }
 
         .app-card:hover .icon-circle {
-            background: var(--primary);
+            transform: scale(1.1) rotate(-5deg);
             color: white;
-            transform: rotate(-10deg);
+        }
+
+        .card-driver:hover .icon-circle {
+            background: var(--driver-color);
+        }
+
+        .card-admin:hover .icon-circle {
+            background: var(--admin-color);
+        }
+
+        .card-client:hover .icon-circle {
+            background: var(--client-color);
         }
 
         h3 {
@@ -125,46 +155,102 @@
             .grid {
                 grid-template-columns: 1fr;
             }
+        }
 
-            body {
-                overflow-y: auto;
-                padding: 40px 0;
-            }
+        /* Language Toggle Style */
+        .lang-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            z-index: 100;
+            transition: 0.3s;
+        }
+
+        .lang-toggle:hover {
+            background: var(--primary);
+            border-color: var(--primary);
         }
     </style>
 </head>
 
 <body>
 
+    <button id="lang-btn" class="lang-toggle" onclick="toggleLanguage()">🇺🇦 UA</button>
+
     <div class="hub-container">
         <div class="header">
-            <div class="logo-large">
-                <i class="fas fa-route"></i>
-                <span>LogiFlow</span>
-            </div>
-            <p class="subtitle">Ecosistema inteligente de logística de última milla</p>
+            <div class="logo-large"><i class="fas fa-route"></i><span>LogiFlow</span></div>
+            <p class="subtitle" data-i18n="subtitle">Екосистема логістики останньої милі</p>
         </div>
 
         <div class="grid">
-            <a href="https://logiflow-delivery.netlify.app/" target="_blank" class="app-card">
+            <a href="./login.html?role=driver" class="app-card card-driver">
                 <div class="icon-circle"><i class="fas fa-motorcycle"></i></div>
-                <h3>Driver App</h3>
-                <p>Gestión de rutas, navegación GPS y evidencias de entrega en tiempo real.</p>
+                <h3 data-i18n="driverTitle">Driver App</h3>
+                <p data-i18n="driverDesc">Керування маршрутами, GPS-навігація та підтвердження доставки.</p>
             </a>
 
-            <a href="https://logiflow-admin.netlify.app/" target="_blank" class="app-card">
+            <a href="./login.html?role=admin" class="app-card card-admin">
                 <div class="icon-circle"><i class="fas fa-chart-line"></i></div>
-                <h3>Control Panel</h3>
-                <p>Monitorización de flota, estadísticas de entrega y gestión de incidencias.</p>
+                <h3 data-i18n="adminTitle">Control Panel</h3>
+                <p data-i18n="adminDesc">Моніторинг автопарку та управління замовленнями для адміністрації.</p>
             </a>
 
-            <a href="https://logiflow-client.netlify.app/" target="_blank" class="app-card">
+            <a href="https://logiflow-client.netlify.app/" target="_blank" class="app-card card-client">
                 <div class="icon-circle"><i class="fas fa-box-open"></i></div>
-                <h3>Customer Portal</h3>
-                <p>Seguimiento de pedidos y notificaciones de llegada para el cliente final.</p>
+                <h3 data-i18n="clientTitle">Customer Portal</h3>
+                <p data-i18n="clientDesc">Відстеження посилок у режимі реального часу для кінцевого споживача.</p>
             </a>
         </div>
     </div>
+
+    <script>
+        const TRANSLATIONS = {
+            es: {
+                subtitle: "Ecosistema inteligente de logística de última milla",
+                driverTitle: "Driver App",
+                driverDesc: "Gestión de rutas, navegación GPS y evidencias de entrega.",
+                adminTitle: "Control Panel",
+                adminDesc: "Monitorización de flota y gestión de pedidos para administración.",
+                clientTitle: "Customer Portal",
+                clientDesc: "Seguimiento de paquetes en tiempo real para el cliente final."
+            },
+            ua: {
+                subtitle: "Інтелектуальна екосистема логістики останньої милі",
+                driverTitle: "Driver App",
+                driverDesc: "Керування маршрутами, GPS-навігація та підтвердження доставки.",
+                adminTitle: "Control Panel",
+                adminDesc: "Моніторинг автопарку та управління замовленнями для адміністрації.",
+                clientTitle: "Customer Portal",
+                clientDesc: "Відстеження посилок у режимі реального часу для кінцевого споживача."
+            }
+        };
+
+        let currentLang = localStorage.getItem("logiflow_lang") || "ua";
+
+        function updateUI() {
+            document.querySelectorAll("[data-i18n]").forEach(el => {
+                const key = el.getAttribute("data-i18n");
+                el.textContent = TRANSLATIONS[currentLang][key];
+            });
+            document.getElementById("lang-btn").textContent = currentLang === "es" ? "🇺🇦 UA" : "🇪🇸 ES";
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === "es" ? "ua" : "es";
+            localStorage.setItem("logiflow_lang", currentLang);
+            updateUI();
+        }
+
+        document.addEventListener("DOMContentLoaded", updateUI);
+    </script>
 
 </body>
 

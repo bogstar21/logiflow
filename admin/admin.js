@@ -1,4 +1,51 @@
 // ============================================
+// LOGIFLOW — Route Guard (Supabase Auth)
+// ============================================
+const SUPABASE_URL_GUARD = "https://odopvrjvubngjqegwcbu.supabase.co";
+const SUPABASE_ANON_KEY_GUARD = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kb3B2cmp2dWJuZ2pxZWd3Y2J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODM5MjUsImV4cCI6MjA4Mzk1OTkyNX0.fRk5SeF2V6tlrNCNPoJsTG8pTKJvz89ZE2zzRX8kQ4M";
+
+// Hide page until auth is verified — prevents data leaks
+document.documentElement.style.visibility = "hidden";
+
+const _sbGuard = supabase.createClient(SUPABASE_URL_GUARD, SUPABASE_ANON_KEY_GUARD);
+
+(async () => {
+  try {
+    const { data: { session } } = await _sbGuard.auth.getSession();
+
+    const userRole = session.user?.user_metadata?.role;
+
+    if (!session || (userRole !== "admin" && userRole !== "owner")) {
+      console.error("Acceso denegado: Se requiere rol Admin u Owner");
+      window.location.href = "../login.html";
+      return;
+    }
+
+    // ✅ Auth passed — reveal the page
+    document.documentElement.style.visibility = "visible";
+
+  } catch (e) {
+    console.error("Auth guard error:", e);
+    window.location.replace("../login.html");
+  }
+})();
+
+// ============================================
+// LOGOUT — reusable from anywhere in the app
+// ============================================
+async function handleLogout() {
+  try {
+    await _sbGuard.auth.signOut();
+  } catch (e) {
+    console.error("Logout error:", e);
+  }
+  // Clear all app-related localStorage
+  localStorage.removeItem("logiflow_lang");
+  localStorage.removeItem("sb-odopvrjvubngjqegwcbu-auth-token");
+  window.location.replace("../login.html");
+}
+
+// ============================================
 // LOGIFLOW — Admin Dashboard
 // ============================================
 
@@ -7,7 +54,7 @@ const API_URL = "https://logiflow-api-07n7.onrender.com";
 // ============================================
 // TRANSLATIONS
 // ============================================
-let currentLang = localStorage.getItem("logiflow_lang") || "es";
+let currentLang = localStorage.getItem("logiflow_lang") || "ua";
 
 const TRANSLATIONS = {
   es: {
@@ -36,6 +83,7 @@ const TRANSLATIONS = {
     status_pending: "PENDIENTE",
     status_incident: "INCIDENCIA",
     status_tomorrow: "MAÑANA",
+    logout: "Cerrar Sesión",
   },
   ua: {
     dashboard: "Панель",
@@ -63,6 +111,7 @@ const TRANSLATIONS = {
     status_pending: "ОЧІКУЄТЬСЯ",
     status_incident: "ІНЦИДЕНТ",
     status_tomorrow: "НА ЗАВТРА",
+    logout: "Вийти",
   }
 };
 

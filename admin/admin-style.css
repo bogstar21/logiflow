@@ -617,3 +617,27 @@ td {
         height: 350px !important;
     }
 }
+
+/* ============================================
+   LOGOUT BUTTON
+   ============================================ */
+.btn-logout {
+    background: #1e293b;
+    color: white;
+    border: 1px solid #334155;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.btn-logout:hover {
+    background: #334155;
+    border-color: var(--primary-light);
+}

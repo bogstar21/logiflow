@@ -1,16 +1,19 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="ua">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LogiFlow - App Repartidor</title>
+    <title>LogiFlow - Додаток Кур'єра</title>
 
-    <!-- Styles only in head — NO scripts here! -->
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+
+    <!-- Supabase SDK — MUST be in head so route guard runs before body renders -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -20,14 +23,18 @@
             <div class="header-flex">
                 <div class="header-title">
                     <h1><i class="fas fa-shipping-fast"></i> LogiFlow</h1>
-                    <p data-i18n="appTitle" style="color: #94a3b8; font-size: 0.85rem; margin-left: 45px;">Panel de
-                        Control de Reparto</p>
+                    <p data-i18n="appTitle" style="color: #94a3b8; font-size: 0.85rem; margin-left: 45px;">Панель
+                        керування доставкою</p>
                 </div>
                 <div class="header-datetime" style="display: flex; align-items: center; gap: 20px;">
                     <div id="current-time">00:00:00</div>
                     <button id="lang-btn" onclick="toggleLanguage()"
                         style="background: #334155; border: 1px solid #475569; color: white; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold;">
-                        🇺🇦 UA
+                        🇪🇸 ES
+                    </button>
+                    <!-- Logout Button -->
+                    <button onclick="handleLogout()" class="btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> <span data-i18n="logout">Вийти</span>
                     </button>
                 </div>
             </div>
@@ -39,32 +46,32 @@
         <div class="management-grid">
 
             <section class="card">
-                <h3 class="section-title"><i class="fas fa-id-card"></i> <span data-i18n="access">Acceso</span></h3>
+                <h3 class="section-title"><i class="fas fa-id-card"></i> <span data-i18n="access">Вхід</span></h3>
                 <div class="card-content">
                     <input type="text" id="repartidor-id" data-i18n-placeholder="driverIdPlaceholder"
-                        placeholder="ID Repartidor (Ej: 001)">
+                        placeholder="Введіть ID">
                     <button id="btn-cargar-ruta" class="btn-primary">
-                        <i class="fas fa-sync-alt"></i> <span data-i18n="syncRoute">Sincronizar Mi Ruta</span>
+                        <i class="fas fa-sync-alt"></i> <span data-i18n="syncRoute">Синхронізувати маршрут</span>
                     </button>
                 </div>
 
                 <div class="mini-stats">
-                    <div class="stat-item"><span data-i18n="stops">Paradas</span><b id="delivery-count">0</b></div>
+                    <div class="stat-item"><span data-i18n="stops">Зупинки</span><b id="delivery-count">0</b></div>
                     <div class="stat-item"><span>Lluvia</span><b id="rain-prob">--%</b></div>
                     <div class="stat-item"><span>Tráfico</span><b id="traffic-status">OK</b></div>
                 </div>
 
                 <button id="btn-google-maps" class="btn-action btn-maps-modern"
                     style="background:#4285F4; color:white; width:100%; margin-top:15px; border-radius:8px; padding:12px; font-weight:bold;">
-                    <i class="fab fa-google"></i> <span data-i18n="openGoogleMaps">ABRIR RUTA COMPLETA</span>
+                    <i class="fab fa-google"></i> <span data-i18n="openGoogleMaps">ВІДКРИТИ ПОВНИЙ МАРШРУТ</span>
                 </button>
             </section>
 
             <section class="card">
-                <h3 class="section-title"><i class="fas fa-list-ul"></i> <span data-i18n="deliveryOrder">Orden de
-                        Entrega</span></h3>
+                <h3 class="section-title"><i class="fas fa-list-ul"></i> <span data-i18n="deliveryOrder">Порядок
+                        доставки</span></h3>
                 <div id="delivery-ranking" class="ranking-list">
-                    <p class="no-data" data-i18n="noRouteMsg">Introduce tu ID para recibir la ruta...</p>
+                    <p class="no-data" data-i18n="noRouteMsg">Введіть ваш ID для отримання маршруту...</p>
                 </div>
             </section>
 
@@ -90,7 +97,7 @@
     <!-- Scripts at bottom in correct order -->
     <!-- 1. Leaflet FIRST — must exist before main.js uses L.map() -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <!-- 2. Your code SECOND -->
+    <!-- 2. App code (Supabase SDK already loaded in <head>) -->
     <script src="main.js"></script>
 
 </body>

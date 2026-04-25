@@ -1,4 +1,52 @@
 // ============================================
+// LOGIFLOW — Route Guard (Supabase Auth)
+// ============================================
+const SUPABASE_URL_GUARD = "https://odopvrjvubngjqegwcbu.supabase.co";
+const SUPABASE_ANON_KEY_GUARD = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9kb3B2cmp2dWJuZ2pxZWd3Y2J1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzODM5MjUsImV4cCI6MjA4Mzk1OTkyNX0.fRk5SeF2V6tlrNCNPoJsTG8pTKJvz89ZE2zzRX8kQ4M";
+
+// Hide page until auth is verified — prevents data leaks
+document.documentElement.style.visibility = "hidden";
+
+
+const _sbGuard = supabase.createClient(SUPABASE_URL_GUARD, SUPABASE_ANON_KEY_GUARD);
+
+(async () => {
+  try {
+    const { data: { session } } = await _sbGuard.auth.getSession();
+
+    const userRole = session.user?.user_metadata?.role;
+
+    if (!session || (userRole !== "driver" && userRole !== "owner")) {
+      console.error("Acceso denegado: Se requiere rol Driver u Owner");
+      window.location.href = "../login.html";
+      return;
+    }
+
+    // ✅ Auth passed — reveal the page
+    document.documentElement.style.visibility = "visible";
+
+  } catch (e) {
+    console.error("Auth guard error:", e);
+    window.location.replace("../login.html");
+  }
+})();
+
+// ============================================
+// LOGOUT — reusable from anywhere in the app
+// ============================================
+async function handleLogout() {
+  try {
+    await _sbGuard.auth.signOut();
+  } catch (e) {
+    console.error("Logout error:", e);
+  }
+  // Clear all app-related localStorage
+  localStorage.removeItem("logiflow_lang");
+  localStorage.removeItem("sb-odopvrjvubngjqegwcbu-auth-token");
+  window.location.replace("../login.html");
+}
+
+// ============================================
 // LOGIFLOW — Driver App
 // ============================================
 
@@ -18,13 +66,13 @@ let capturedPhotoFile = null;
 // ============================================
 // TRANSLATIONS
 // ============================================
-let currentLang = localStorage.getItem("logiflow_lang") || "es";
+let currentLang = localStorage.getItem("logiflow_lang") || "ua";
 
 const TRANSLATIONS = {
   es: {
     appTitle: "Panel de Control de Reparto",
     access: "Acceso",
-    driverIdPlaceholder: "ID Repartidor (Ej: 001)",
+    driverIdPlaceholder: "ID Repartidor",
     syncRoute: "Sincronizar Mi Ruta",
     routeLoaded: "RUTA CARGADA",
     stops: "Paradas",
@@ -33,9 +81,9 @@ const TRANSLATIONS = {
     openGoogleMaps: "ABRIR RUTA COMPLETA",
     deliveryOrder: "Orden de Entrega",
     noRouteMsg: "Introduce tu ID para recibir la ruta...",
-    enterDriverId: "Por favor, introduce tu ID de repartidor (Ej: 001)",
+    enterDriverId: "Por favor, introduce tu ID de repartidor",
     loading: "Cargando...",
-    driverNotFound: "ID no encontrado. Prueba: 001, 002 o 003",
+    driverNotFound: "ID no encontrado",
     error: "Error de conexión. Inténtalo de nuevo.",
     stop: "PARADA",
     delivered_btn: "Entregado",
@@ -49,22 +97,24 @@ const TRANSLATIONS = {
     incidentSaved: "⚠️ Incidencia registrada.",
     noRouteAlert: "Primero sincroniza tu ruta.",
     noPendingAlert: "¡No hay entregas pendientes!",
+    logout: "Cerrar Sesión",
   },
   ua: {
     appTitle: "Панель керування доставкою",
     access: "Вхід",
-    driverIdPlaceholder: "ID Кур'єра (Напр: DRV-001)",
+    driverIdPlaceholder: "Введіть ID",
     syncRoute: "Синхронізувати маршрут",
     routeLoaded: "МАРШРУТ ЗАВАНТАЖЕНО",
     stops: "Зупинки",
     rain: "Дощ",
     traffic: "Затори",
     openGoogleMaps: "ВІДКРИТИ ПОВНИЙ МАРШРУТ",
+    logout: "Вийти",
     deliveryOrder: "Порядок доставки",
-    noRouteMsg: "Введіть ваш ID для отримання маршруту...",
-    enterDriverId: "Будь ласка, введіть ваш ID кур'єра (Напр: DRV-001)",
+    noRouteMsg: "Введіть ID для отримання маршруту...",
+    enterDriverId: "Введіть ID",
     loading: "Завантаження...",
-    driverNotFound: "ID не знайдено. Спробуйте: DRV-001, DRV-002 або DRV-003",
+    driverNotFound: "ID не знайдено",
     error: "Помилка з'єднання. Спробуйте ще раз.",
     stop: "ЗУПИНКА",
     delivered_btn: "Доставлено",

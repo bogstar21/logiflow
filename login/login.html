@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="ua">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LogiFlow | Увійти</title>
+    <meta name="description"
+        content="Доступ до екосистеми LogiFlow — інтелектуальне управління логістикою останньої милі.">
+
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Supabase SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* ============================================
+           CSS VARIABLES — LogiFlow Dark Theme
+           ============================================ */
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: rgba(30, 41, 59, 0.6);
+            --text-primary: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.3);
+            --accent-admin: #a78bfa;
+            --accent-admin-glow: rgba(167, 139, 250, 0.3);
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: rgba(51, 65, 85, 0.6);
+            --radius: 16px;
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ============================================
+           ANIMATED BACKGROUND
+           ============================================ */
+        .bg-gradient {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-gradient .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .bg-gradient .orb:nth-child(1) {
+            width: 600px;
+            height: 600px;
+            background: var(--accent);
+            top: -200px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-gradient .orb:nth-child(2) {
+            width: 500px;
+            height: 500px;
+            background: var(--accent-admin);
+            bottom: -200px;
+            right: -100px;
+            animation-delay: -7s;
+        }
+
+        .bg-gradient .orb:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            background: #6366f1;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -14s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            25% {
+                transform: translate(50px, -30px) scale(1.05);
+            }
+
+            50% {
+                transform: translate(-30px, 50px) scale(0.95);
+            }
+
+            75% {
+                transform: translate(30px, 30px) scale(1.02);
+            }
+        }
+
+        /* Grid overlay */
+        .bg-gradient::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(56, 189, 248, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(56, 189, 248, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* ============================================
+           LOGIN CONTAINER
+           ============================================ */
+        .login-container {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 460px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 48px 40px;
+            box-shadow:
+                0 25px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            animation: cardIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* ============================================
+           LOGO / HEADER
+           ============================================ */
+        .login-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .login-logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .login-logo .logo-icon {
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.25);
+        }
+
+        .login-logo .logo-text {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-admin));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .login-subtitle {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 400;
+        }
+
+        /* ============================================
+           ROLE SELECTOR
+           ============================================ */
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 28px;
+        }
+
+        .role-card {
+            position: relative;
+            background: rgba(15, 23, 42, 0.5);
+            border: 2px solid var(--border);
+            border-radius: 14px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .role-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .role-card[data-role="driver"]::before {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent);
+        }
+
+        .role-card[data-role="admin"]::before {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.08), transparent);
+        }
+
+        .role-card:hover {
+            border-color: rgba(148, 163, 184, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .role-card.active[data-role="driver"] {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow), 0 0 0 1px var(--accent) inset;
+        }
+
+        .role-card.active[data-role="admin"] {
+            border-color: var(--accent-admin);
+            box-shadow: 0 0 20px var(--accent-admin-glow), 0 0 0 1px var(--accent-admin) inset;
+        }
+
+        .role-card.active::before {
+            opacity: 1;
+        }
+
+        .role-card .role-icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            display: block;
+            transition: transform 0.3s;
+        }
+
+        .role-card:hover .role-icon {
+            transform: scale(1.1);
+        }
+
+        .role-card[data-role="driver"] .role-icon {
+            color: var(--accent);
+        }
+
+        .role-card[data-role="admin"] .role-icon {
+            color: var(--accent-admin);
+        }
+
+        .role-card .role-label {
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.3px;
+        }
+
+        .role-card .role-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Check badge */
+        .role-card .check-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            color: white;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .role-card[data-role="driver"] .check-badge {
+            background: var(--accent);
+        }
+
+        .role-card[data-role="admin"] .check-badge {
+            background: var(--accent-admin);
+        }
+
+        .role-card.active .check-badge {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* ============================================
+           INPUT FIELDS
+           ============================================ */
+        .input-group {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .input-group .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            transition: color 0.3s;
+            z-index: 2;
+        }
+
+        .input-group input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px 16px 16px 48px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(148, 163, 184, 0.5);
+        }
+
+        .input-group input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .input-group input:focus+.input-icon,
+        .input-group input:focus~.input-icon {
+            color: var(--accent);
+        }
+
+        /* Password toggle */
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.95rem;
+            z-index: 2;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--text-primary);
+        }
+
+        /* ============================================
+           LOGIN BUTTON
+           ============================================ */
+        .login-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent), #0284c7);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+            margin-top: 8px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(56, 189, 248, 0.3);
+        }
+
+        .login-btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* ============================================
+           ERROR MESSAGE
+           ============================================ */
+        .login-error {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-top: 16px;
+            color: #fca5a5;
+            font-size: 0.85rem;
+            font-weight: 500;
+            line-height: 1.4;
+        }
+
+        .login-error .error-icon {
+            font-size: 1.1rem;
+            color: var(--danger);
+            flex-shrink: 0;
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            30%,
+            50%,
+            70%,
+            90% {
+                transform: translateX(-4px);
+            }
+
+            20%,
+            40%,
+            60%,
+            80% {
+                transform: translateX(4px);
+            }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .login-footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        .login-footer .secure-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--success);
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        /* ============================================
+           LANGUAGE TOGGLE
+           ============================================ */
+        .lang-toggle {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            transition: all 0.3s;
+            z-index: 5;
+            letter-spacing: 0.3px;
+        }
+
+        .lang-toggle:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 36px 24px;
+                border-radius: 20px;
+            }
+
+            .login-logo .logo-text {
+                font-size: 1.6rem;
+            }
+
+            .role-card {
+                padding: 16px 12px;
+            }
+
+            .role-card .role-icon {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Animated Background -->
+    <div class="bg-gradient" aria-hidden="true">
+        <div class="orb"></div>
+        <div class="orb"></div>
+        <div class="orb"></div>
+    </div>
+
+    <!-- Login Card -->
+    <div class="login-container">
+        <div class="login-card">
+
+            <!-- Language Toggle -->
+            <button class="lang-toggle" id="lang-btn" onclick="toggleLanguage()">🇪🇸 ES</button>
+
+            <!-- Header -->
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="logo-icon">
+                        <i class="fas fa-route"></i>
+                    </div>
+                    <span class="logo-text">LogiFlow</span>
+                </div>
+                <p class="login-subtitle" data-i18n="subtitle">Доступ до екосистеми логістики</p>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="role-selector" id="role-selector">
+                <div class="role-card" data-role="driver" id="role-driver" onclick="selectRole(this)">
+                    <span class="check-badge"><i class="fas fa-check"></i></span>
+                    <i class="fas fa-motorcycle role-icon"></i>
+                    <div class="role-label" data-i18n="roleDriver">Водій</div>
+                    <div class="role-desc" data-i18n="roleDriverDesc">Додаток водія</div>
+                </div>
+                <div class="role-card" data-role="admin" id="role-admin" onclick="selectRole(this)">
+                    <span class="check-badge"><i class="fas fa-check"></i></span>
+                    <i class="fas fa-shield-halved role-icon"></i>
+                    <div class="role-label" data-i18n="roleAdmin">Адміністратор</div>
+                    <div class="role-desc" data-i18n="roleAdminDesc">Панель керування</div>
+                </div>
+            </div>
+
+            <!-- Email Input -->
+            <div class="input-group">
+                <i class="fas fa-user input-icon"></i>
+                <input type="email" id="login-email" data-i18n-placeholder="emailPlaceholder"
+                    placeholder="пошта@компанія.com" autocomplete="email" required>
+            </div>
+
+            <!-- Password Input -->
+            <div class="input-group">
+                <i class="fas fa-lock input-icon"></i>
+                <input type="password" id="login-password" data-i18n-placeholder="passwordPlaceholder"
+                    placeholder="Пароль" autocomplete="current-password" required>
+                <button type="button" class="toggle-password" id="toggle-password" onclick="togglePasswordVisibility()">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+
+            <!-- Login Button -->
+            <button class="login-btn" id="login-btn" onclick="handleLogin()">
+                <i class="fas fa-sign-in-alt"></i> <span data-i18n="loginBtn">Увійти</span>
+            </button>
+
+            <!-- Error Display -->
+            <div class="login-error" id="login-error">
+                <i class="fas fa-exclamation-circle error-icon"></i>
+                <span id="login-error-text"></span>
+            </div>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>© 2026 LogiFlow — Logistics Ecosystem</p>
+                <div class="secure-badge">
+                    <i class="fas fa-lock"></i> <span data-i18n="secureBadge">Безпечне з'єднання через Supabase
+                        Auth</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Auth Script -->
+    <script src="auth.js"></script>
+
+    <!-- Page-level interactions -->
+    <script>
+        // ============================================
+        // ROLE SELECTION
+        // ============================================
+        function selectRole(card) {
+            document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+        }
+
+        // ============================================
+        // PASSWORD VISIBILITY TOGGLE
+        // ============================================
+        function togglePasswordVisibility() {
+            const input = document.getElementById('login-password');
+            const icon = document.querySelector('#toggle-password i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // ============================================
+        // ENTER KEY SUPPORT
+        // ============================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ============================================
+        // APPLY SAVED LANGUAGE ON LOAD
+        // ============================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(currentLang);
+
+            const params = new URLSearchParams(window.location.search);
+            const roleParam = params.get('role');
+
+            if (roleParam === 'admin') {
+                const adminCard = document.querySelector('.role-card[data-role="admin"]');
+                if (adminCard) selectRole(adminCard);
+            } else if (roleParam === 'driver') {
+                const driverCard = document.querySelector('.role-card[data-role="driver"]');
+                if (driverCard) selectRole(driverCard);
+            }
+        });
+    </script>
+
+</body>
+
+</html>
